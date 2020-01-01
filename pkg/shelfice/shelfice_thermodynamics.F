@@ -46,6 +46,10 @@ C     === Global variables ===
 #  include "tamc_keys.h"
 # endif /* SHI_ALLOW_GAMMAFRICT */
 #endif /* ALLOW_AUTODIFF_TAMC */
+#ifdef ALLOW_SHELFICE_GROUNDED_ICE
+# include "SURFACE.h"
+#endif
+
 
 C     !INPUT/OUTPUT PARAMETERS:
 C     === Routine arguments ===
@@ -97,7 +101,7 @@ C     drKp1, recip_drLoc
       _RL eps1, eps2, eps3, eps3a, eps4, eps5, eps6, eps7, eps8
       _RL cFac, rFac, dFac, fwflxFac, rFWinBL
       _RL aqe, bqe, cqe, discrim, recip_aqe
-      _RL drKp1, recip_drLoc
+      _RL drKp1, recip_drLoc, drLoc
       _RL recip_latentHeat
       _RL tmpFac
 
@@ -118,10 +122,25 @@ C     drKp1, recip_drLoc
 #endif
 
 #ifdef ALLOW_SHIFWFLX_CONTROL
+<<<<<<< HEAD
+      _RL xx_shifwflx_loc(1-olx:snx+olx,1-oly:sny+oly,nsx,nsy)
+#endif
+
+
+#ifdef ALLOW_SHELFICE_GROUNDED_ICE
+      _RL massMin  (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RL effMass  (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RL mass, shA, FACTOR1, FACTOR2
+      LOGICAL massmin_truedens_temp
+=======
       _RL xx_shifwflx_loc(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+>>>>>>> branch_remeshing
 #endif
 CEOP
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+
+       CALL SHELFICE_FIELDS_LOAD(
+     I      myTime, myIter, myThid )
 
 #ifdef SHI_ALLOW_GAMMAFRICT
 #ifdef ALLOW_AUTODIFF
@@ -240,6 +259,68 @@ C     where this value is part of the protocol
      &     myTime, myIter, myThid )
 #endif
 #endif /* ALLOW_SHIFWFLX_CONTROL */
+
+#ifdef ALLOW_SHELFICE_GROUNDED_ICE
+
+      DO bj = myByLo(myThid), myByHi(myThid)
+       DO bi = myBxLo(myThid), myBxHi(myThid)
+        DO j = 1-OLy, sNy+OLy
+         DO i = 1-OLx, sNx+OLx
+          MASSMIN  (i,j,bi,bj) = 0. _d 0
+          EFFMASS  (i,j,bi,bj) = 0. _d 0
+          GrdFactor(i,j,bi,bj) = 0. _d 0
+         ENDDO
+        ENDDO
+       ENDDO
+      ENDDO
+
+      IF (myIter.eq.niter0) THEN
+!       massmin_truedens_temp = shelfice_massmin_trueDens
+!       shelfice_massmin_trueDens = .FALSE.
+           bi = 1
+           bj=1
+           DO k=1,Nr
+            CALL FIND_RHO_2D(
+     I                1-olx, sNx+olx, 1-oly, sNy+oly, k,
+     I                theta(1-OLx,1-OLy,k,bi,bj),
+     I                salt (1-OLx,1-OLy,k,bi,bj),
+     O                rhoInSitu(1-OLx,1-OLy,k,bi,bj),
+     I                k, 1, 1, myThid )
+           ENDDO
+      ENDIF
+
+      CALL SHELFICE_FIND_MASSMIN(massMin, myThid)
+
+
+!      IF (myIter.eq.0) THEN
+!       shelfice_massmin_trueDens = massmin_truedens_temp
+!      ENDIF
+
+      DO bj = myByLo(myThid), myByHi(myThid)
+       DO bi = myBxLo(myThid), myBxHi(myThid)
+        DO j = 1-OLy, sNy+OLy
+         DO i = 1-OLx, sNx+OLx
+
+           mass = shelficemass(i,j,bi,bj)
+
+           GrdFactor(i,j,bi,bj) = tanh((massMin(i,j,bi,bj)
+     &            - mass)*1. _d 5)
+
+           SHA=massMin(i,j,bi,bj)/
+     &        SQRT(.01+mass**2)
+           FACTOR1 = ((1-sha)/2.)
+           FACTOR2 = (1+sha)/2.
+
+           EFFMASS(I,J,BI,BJ)=
+     &       (FACTOR1*GrdFactor(i,j,bi,bj) + FACTOR2)*mass
+
+         ENDDO
+        ENDDO
+       ENDDO
+      ENDDO
+  
+#endif
+
       DO bj = myByLo(myThid), myByHi(myThid)
        DO bi = myBxLo(myThid), myBxHi(myThid)
 
@@ -313,8 +394,103 @@ C-    New (more accurate) averaging expression for uStar:
           ENDDO
          ENDDO
         ENDIF
+<<<<<<< HEAD
+C--  DNG: TOPDR averages U/V over boundary layer at U/V points, then averages
+C--  (as opposed to averaging horizontally then vertically)
+#ifdef SHI_USTAR_TOPDR
+c    Average at u- and v- points over deltaR. use later to override uLoc/vLoc
+        IF ( SHELFICEBoundaryLayer ) THEN
+         DO J = 1, sNy+1
+          DO I = 1, sNx+1
+           K = ksurfW(I,J,bi,bj)
+           Kp1 = K+1
+           IF (K.lt.Nr) then
+            drKp1 = drF(K)*(1. _d 0-_hFacW(I,J,K,bi,bj))
+            drKp1 = MIN( drKp1, drF(Kp1)*_hFacW(I,J,Kp1,bi,bj))
+            drKp1 = max (drKp1, 0. _d 0)
+            drLoc = (drF(K)*_hFacW(I,J,K,bi,bj)+drKp1)
+            IF (drLoc.gt.0.0) THEN
+             recip_drLoc = 1./drLoc
+            ELSE
+             recip_drLoc = 0.0
+            ENDIF
+            u_topdr(I,J,bi,bj) = 
+     &       (drF(K)*_hFacW(I,J,K,bi,bj)*uVel(I,J,K,bi,bj) + 
+     &        drKp1*uVel(I,J,Kp1,bi,bj)) 
+     &      * recip_drLoc
+C zero out u_topdr under grounded ice as uLoc is average of u_topdr
+C in adjacent cells.
+!#ifdef ALLOW_SHELFICE_GROUNDED_ICE
+!           u_topdr(i,j,bi,bj) =
+!     &       u_topdr(i,j,bi,bj)*(GrdFactor(i,j,bi,bj)*0.5+0.5)
+!#endif
+           ELSE
+            u_topdr(I,J,bi,bj) = 0. _d 0
+           ENDIF
+
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+           IF (depthColW(i,j,bi,bj) .GT. cg2dminColumnEps) THEN
+             IF (depthColW(i,j,bi,bj) .LT. 10.0) THEN
+               u_topdr(i,j,bi,bj) = u_topdr(i,j,bi,bj)*
+     &            (cos( (1 - (depthColW(i,j,bi,bj)-cg2dminColumnEps)
+     &                 /(shelficedepthminmelt-cg2dminColumnEps))*PI )
+     &            + 0. _d 0)
+             ENDIF
+           ELSE
+              u_topdr(i,j,bi,bj) = 0. _d 0
+           ENDIF
+#endif
+
+           
+           K = ksurfS(I,J,bi,bj)
+           Kp1 = K+1
+           IF (K.lt.Nr) then
+            drKp1 = drF(K)*(1. _d 0-_hFacS(I,J,K,bi,bj))
+            drKp1 = MIN( drKp1, drF(Kp1)*_hFacS(I,J,Kp1,bi,bj))
+            drKp1 = max (drKp1, 0. _d 0)
+            drLoc = (drF(K)*_hFacS(I,J,K,bi,bj)+drKp1)
+            IF (drLoc.gt.0.0) THEN
+             recip_drLoc = 1./drLoc
+            ELSE
+             recip_drLoc = 0.0
+            ENDIF
+            v_topdr(I,J,bi,bj) = 
+     &       (drF(K)*_hFacS(I,J,K,bi,bj)*vVel(I,J,K,bi,bj) + 
+     &        drKp1*vVel(I,J,Kp1,bi,bj)) 
+     &      * recip_drLoc
+C zero out v_topdr under grounded ice as uLoc is average of v_topdr
+C in adjacent cells.
+!#ifdef ALLOW_SHELFICE_GROUNDED_ICE
+!           v_topdr(i,j,bi,bj) =
+!     &       v_topdr(i,j,bi,bj)*(GrdFactor(i,j,bi,bj)*0.5+0.5)
+!#endif
+           ELSE
+            v_topdr(I,J,bi,bj) = 0. _d 0
+           ENDIF
+
+          ENDDO
+         ENDDO
+        ENDIF
+
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+           IF (depthColS(i,j,bi,bj) .GT. cg2dminColumnEps) THEN
+             IF (depthColS(i,j,bi,bj) .LT. 10.0) THEN
+               v_topdr(i,j,bi,bj) = v_topdr(i,j,bi,bj)*
+     &            (cos( (1 - (depthColS(i,j,bi,bj)-cg2dminColumnEps)
+     &                 /(shelficedepthminmelt-cg2dminColumnEps))*PI )
+     &            + 0. _d 0)
+             ENDIF
+           ELSE
+              v_topdr(i,j,bi,bj) = 0. _d 0
+           ENDIF
+#endif
+
+
+#endif
+=======
 #endif /* SHI_ALLOW_GAMMAFRICT */
 
+>>>>>>> branch_remeshing
         IF ( SHELFICEBoundaryLayer ) THEN
 C--   average over boundary layer width
          DO J = 1, sNy
@@ -611,6 +787,12 @@ cph     &           * ( saltFreeze - sLoc(I,J) ) / saltFreeze
 #ifdef ALLOW_SHIFWFLX_CONTROL
      &           + xx_shifwflx_loc(I,J,bi,bj)
 #endif /*  ALLOW_SHIFWFLX_CONTROL */
+
+#ifdef ALLOW_SHELFICE_GROUNDED_ICE
+           freshWaterFlux = 
+     &       freshWaterFlux*(GrdFactor(i,j,bi,bj)*0.5+0.5)
+#endif
+
 C--   Calculate the upward heat and fresh water fluxes;
 C--   MITgcm sign conventions: downward (negative) fresh water flux
 C--   implies melting and due to upward (positive) heat flux
@@ -636,6 +818,14 @@ C--        in order to conserve salt and temp even with real FW Flux
      &           )*( saltFreeze - sLoc(I,J) )
      &           - rFWinBL*freshWaterFlux*mass2rUnit
      &            *( sLoc(I,J) - salt(I,J,K,bi,bj) )
+#ifdef ALLOW_SHELFICE_GROUNDED_ICE
+           shelfIceHeatFlux(i,j,bi,bj) =
+     &       shelfIceHeatFlux(i,j,bi,bj)*(GrdFactor(i,j,bi,bj)*0.5+0.5)
+           shelfIceForcingT(i,j,bi,bj) =
+     &       shelfIceForcingT(i,j,bi,bj)*(GrdFactor(i,j,bi,bj)*0.5+0.5)
+           shelfIceForcingS(i,j,bi,bj) =
+     &       shelfIceForcingS(i,j,bi,bj)*(GrdFactor(i,j,bi,bj)*0.5+0.5)
+#endif
            ELSE
             shelfIceHeatFlux      (I,J,bi,bj) = 0. _d 0
             shelfIceFreshWaterFlux(I,J,bi,bj) = 0. _d 0
@@ -661,8 +851,13 @@ c     IF ( SHELFICEloadAnomalyFile .EQ. ' ' ) THEN
         DO bi = myBxLo(myThid), myBxHi(myThid)
          DO j = 1-OLy, sNy+OLy
           DO i = 1-OLx, sNx+OLx
-           shelficeLoadAnomaly(i,j,bi,bj) = gravity
+#ifndef ALLOW_SHELFICE_GROUNDED_ICE
+          shelficeLoadAnomaly(i,j,bi,bj) = gravity
      &      *( shelficeMass(i,j,bi,bj) + rhoConst*Ro_surf(i,j,bi,bj) )
+#else
+          shelficeLoadAnomaly(i,j,bi,bj) = gravity
+     &      *( EFFMASS(I,J,BI,BJ) + rhoConst*Ro_surf(i,j,bi,bj) )
+#endif
           ENDDO
          ENDDO
         ENDDO
@@ -698,6 +893,25 @@ C     Friction velocity
        CALL DIAGNOSTICS_FILL_RS( R_shelfice, 'SHIRshel',
      &                           0, 1, 0, 1, 1, myThid )
 #endif
+#ifdef ALLOW_SHELFICE_GROUNDED_ICE
+       CALL DIAGNOSTICS_FILL(EFFMASS,'SHI_MEff',
+     &      0,1,0,1,1,myThid)
+       CALL DIAGNOSTICS_FILL(massmin,'SHI_Mmin',
+     &      0,1,0,1,1,myThid)
+       CALL DIAGNOSTICS_FILL(Rmin_surf,'SHI_Rmin',
+     &      0,1,0,1,1,myThid)
+#endif
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+       CALL DIAGNOSTICS_FILL(pReleaseTransX,'pRelUflx',
+     &      0,1,0,1,1,myThid)
+       CALL DIAGNOSTICS_FILL(preleaseTransY,'pRelVflx',
+     &      0,1,0,1,1,myThid)
+       CALL DIAGNOSTICS_FILL(depthColW,'DEPTH_DX',
+     &      0,1,0,1,1,myThid)
+       CALL DIAGNOSTICS_FILL(depthColS,'DEPTH_DY',
+     &      0,1,0,1,1,myThid)
+#endif
+
       ENDIF
 #endif /* ALLOW_DIAGNOSTICS */
 

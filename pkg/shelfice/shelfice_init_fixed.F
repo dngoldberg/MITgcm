@@ -277,8 +277,60 @@ c     ENDIF
        diagCode  = 'SM      L1      '
        CALL DIAGNOSTICS_ADDTOLIST( diagNum,
      I      diagName, diagCode, diagUnits, diagTitle, 0, myThid )
-#endif
+ 
+       diagName  = 'SHI_MEff'
+       diagTitle = 'dynamic ice shelf mass for surface load anomaly'
+       diagUnits = 'kg/m^2          '
+       diagCode  = 'SM      L1      '
+       CALL DIAGNOSTICS_ADDTOLIST( diagNum,
+     I      diagName, diagCode, diagUnits, diagTitle, 0, myThid )
 
+       diagName  = 'SHI_Mmin'
+       diagTitle = 'dynamic ice shelf mass to allow MWCT'
+       diagUnits = 'kg/m^2          '
+       diagCode  = 'SM      L1      '
+       CALL DIAGNOSTICS_ADDTOLIST( diagNum,
+     I      diagName, diagCode, diagUnits, diagTitle, 0, myThid )
+
+       diagName  = 'SHI_Rmin'
+       diagTitle = 'dynamic ice shelf mass for surface load anomaly'
+       diagUnits = 'm          '
+       diagCode  = 'SM      L1      '
+       CALL DIAGNOSTICS_ADDTOLIST( diagNum,
+     I      diagName, diagCode, diagUnits, diagTitle, 0, myThid )
+
+! DNG FOLLOWING ONLY WHEN DARCY FLUX IMPLEMENTED	 
+
+#ifdef ALLOW_PRESSURE_RELEASE_CODE 
+       diagName  = 'pRelUflx'
+       diagTitle = 'dynamic ice shelf mass for surface load anomaly'
+       diagUnits = 'm          '
+       diagCode  = 'SM      L1      '
+       CALL DIAGNOSTICS_ADDTOLIST( diagNum,
+     I      diagName, diagCode, diagUnits, diagTitle, 0, myThid )
+
+       diagName  = 'pRelVflx'
+       diagTitle = 'dynamic ice shelf mass for surface load anomaly'
+       diagUnits = 'm          '
+       diagCode  = 'SM      L1      '
+       CALL DIAGNOSTICS_ADDTOLIST( diagNum,
+     I      diagName, diagCode, diagUnits, diagTitle, 0, myThid )
+
+       diagName  = 'DEPTH_DX'
+       diagTitle = 'dynamic ice shelf mass for surface load anomaly'
+       diagUnits = 'm          '
+       diagCode  = 'SM      L1      '
+       CALL DIAGNOSTICS_ADDTOLIST( diagNum,
+     I      diagName, diagCode, diagUnits, diagTitle, 0, myThid )
+
+       diagName  = 'DEPTH_DY'
+       diagTitle = 'dynamic ice shelf mass for surface load anomaly'
+       diagUnits = 'm          '
+       diagCode  = 'SM      L1      '
+       CALL DIAGNOSTICS_ADDTOLIST( diagNum,
+     I      diagName, diagCode, diagUnits, diagTitle, 0, myThid )
+
+#endif
       ENDIF
 #endif /* ALLOW_DIAGNOSTICS */
 #endif /* ALLOW_SHELFICE */

@@ -407,6 +407,8 @@ C     v2zonDir  :: minus sine of  orientation angle at V point location
 C     fCori     :: Coriolis parameter at grid Center point
 C     fCoriG    :: Coriolis parameter at grid Corner point
 C     fCoriCos  :: Coriolis Cos(phi) parameter at grid Center point (for NH)
+C     depthColW :: thickness of ocean column at u-points
+C     depthColS :: thickness of ocean column at v-points
 
       COMMON /GRID_RS/
      &  dxC,dxF,dxG,dxV,dyC,dyF,dyG,dyU,
@@ -427,6 +429,9 @@ C     fCoriCos  :: Coriolis Cos(phi) parameter at grid Center point (for NH)
      &  tanPhiAtU, tanPhiAtV,
      &  angleCosC, angleSinC, u2zonDir, v2zonDir,
      &  fCori, fCoriG, fCoriCos
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+     &  ,depthColW, depthColS
+#endif
       _RS dxC            (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RS dxF            (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RS dxG            (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
@@ -497,6 +502,10 @@ C     fCoriCos  :: Coriolis Cos(phi) parameter at grid Center point (for NH)
       _RS fCori          (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RS fCoriG         (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RS fCoriCos       (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+      _RS depthColW      (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RS depthColS      (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+#endif
 
 #ifdef ALLOW_DEPTH_CONTROL
 C--   COMMON /GRID_DEPTH_CTRL/ grid defining variables for Depth Control code.

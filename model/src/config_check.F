@@ -736,6 +736,16 @@ c     ENDIF
      &                      SQUEEZE_RIGHT, myThid )
       ENDIF
 
+#if (defined ALLOW_PRESSURE_RELEASE_CODE)
+      IF (cg2dMinColumnEps .GT. 0. _d 0 
+     & .AND. implicDiv2DFlow .NE. 1.0) THEN
+       WRITE(msgBuf,'(2A)') 'CONFIG_CHECK: ',
+     &       'need implicDiv2DFlow=1 for pressure release code'
+        CALL PRINT_ERROR( msgBuf, myThid )
+        errCount = errCount + 1
+      ENDIF
+#endif
+
 C--   Pressure calculation and pressure gradient:
 #ifndef INCLUDE_PHIHYD_CALCULATION_CODE
       IF ( momPressureForcing .OR. storePhiHyd4Phys ) THEN

@@ -1,4 +1,7 @@
 #include "CPP_OPTIONS.h"
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+#include "SHELFICE_OPTIONS.h"
+#endif
 
 CBOP
 C     !ROUTINE: DIAGS_PHI_RLOW
@@ -26,6 +29,9 @@ C     == Global variables ==
 #include "GRID.h"
 #include "SURFACE.h"
 #include "DYNVARS.h"
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+#include "SHELFICE.h"
+#endif
 
 C     !INPUT/OUTPUT PARAMETERS:
 C     == Routine Arguments ==
@@ -82,6 +88,9 @@ C  --  Finite Volume Form
              ddRloc = rC(k)-R_low(i,j,bi,bj)
              phiHydLow(i,j,bi,bj) = phiHydC(i,j)
      &        + ddRloc*gravFacC(k)*gravity*alphRho(i,j)*recip_rhoConst
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+             phiHydLowC(i,j,bi,bj) = phiHydC(i,j)-phiHydC_m(k)
+#endif
            ENDIF
           ENDDO
          ENDDO
@@ -104,6 +113,9 @@ C  --  Finite Difference Form
      &                  +( MIN(zeroRL,ddRloc)*ratioRm
      &                    +MAX(zeroRL,ddRloc)*ratioRp
      &                   )*gravity*alphRho(i,j)*recip_rhoConst
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+             phiHydLowC(i,j,bi,bj) = phiHydC(i,j)-phiHydC_m(k)
+#endif
            ENDIF
           ENDDO
          ENDDO
@@ -188,6 +200,9 @@ C     so that this expression is the same as before (same as in "ELSE" block bel
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 C  -- end if k=Nr.
       ENDIF
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+      _EXCH_XY_RL(phiHydLowC,mythid)
+#endif
 
 #endif /* INCLUDE_PHIHYD_CALCULATION_CODE */
 

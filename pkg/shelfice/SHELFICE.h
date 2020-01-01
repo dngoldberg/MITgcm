@@ -76,6 +76,8 @@ C     SHELFICElatentHeat       :: latent heat of fusion (def: 334000 J/kg)
 C     SHELFICEwriteState       :: enable output
 C     SHELFICEHeatCapacity_Cp  :: heat capacity of ice shelf (def: 2000 J/K/kg)
 C     rhoShelfIce              :: density of ice shelf (def: 917.0 kg/m^3)
+C     conserve_ssh             :: KS16. Use the obcs to conserve net open
+C                                 ocean eta to 0m
 C
 C     SHELFICE_dump_mnc        :: use netcdf for snapshot output
 C     SHELFICE_tave_mnc        :: use netcdf for time-averaged output
@@ -122,8 +124,11 @@ CEOP
      &     SHELFICEDragLinear, SHELFICEDragQuadratic,
      &     shiCdrag, shiZetaN, shiRc,
      &     shiPrandtl, shiSchmidt, shiKinVisc,
-     &     SHELFICEremeshFrequency,
-     &     SHELFICEsplitThreshold, SHELFICEmergeThreshold
+     &     SHELFICERemeshFrequency,
+     &     SHELFICESplitThreshold,
+     &     SHELFICEMergeThreshold,
+     &     SHELFICE_forcing_period,
+     &     SHELFICEdepthMinMelt
 
       _RL SHELFICE_dumpFreq, SHELFICE_taveFreq
       _RL SHELFICEheatTransCoeff
@@ -137,15 +142,25 @@ CEOP
       _RL SHELFICEthetaSurface
       _RL shiCdrag, shiZetaN, shiRc
       _RL shiPrandtl, shiSchmidt, shiKinVisc
-      _RL SHELFICEremeshFrequency
-      _RL SHELFICEsplitThreshold
-      _RL SHELFICEmergeThreshold
+      _RL SHELFICERemeshFrequency
+      _RL SHELFICESplitThreshold
+      _RL SHELFICEMergeThreshold
+      _RL SHELFICE_forcing_period
+      _RL SHELFICEdepthMinMelt
+  
 
       COMMON /SHELFICE_FIELDS_RL/
      &     shelficeMass, shelficeMassInit,
      &     shelficeLoadAnomaly,
      &     shelficeForcingT, shelficeForcingS,
      &     shiTransCoeffT, shiTransCoeffS
+#ifdef ALLOW_SHELFICE_GROUNDED_ICE
+     &     , phiHydC_m, grdFactor
+#endif	 
+#ifdef ALLOW_SHELFICE_TIMEDEP_FORCING
+     &     , mass_Shelfice0, mass_Shelfice1
+#endif	 
+
       _RL shelficeMass          (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL shelficeMassInit      (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL shelficeLoadAnomaly   (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
@@ -153,17 +168,31 @@ CEOP
       _RL shelficeForcingS      (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL shiTransCoeffT        (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL shiTransCoeffS        (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+#ifdef ALLOW_SHELFICE_GROUNDED_ICE
+       _RL phiHydC_m             (nR)
+       _RL grdFactor(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+#endif	 
+#ifdef ALLOW_SHELFICE_TIMEDEP_FORCING
+       _RL mass_shelfice0       (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+       _RL mass_shelfice1       (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+#endif
 
       COMMON /SHELFICE_FIELDS_RS/
      &     R_shelfIce,
      &     shelficeHeatFlux,
      &     shelfIceFreshWaterFlux,
      &     shelfIceMassDynTendency
+#ifdef ALLOW_SHELFICE_GROUNDED_ICE
+     &     ,r_mwct
+#endif
       _RS R_shelfIce            (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RS shelficeHeatFlux      (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RS shelficeFreshWaterFlux(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RS
      &   shelfIceMassDynTendency(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+#ifdef ALLOW_SHELFICE_GROUNDED_ICE
+      _RS R_MWCT                (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+#endif
 
 #ifdef ALLOW_SHIFWFLX_CONTROL
       COMMON /SHELFICE_MASKS_CTRL/ maskSHI
@@ -193,6 +222,8 @@ CEOP
       LOGICAL SHELFICE_oldCalcUStar
       LOGICAL SHELFICEMassStepping
       LOGICAL SHELFICEDynMassOnly
+      LOGICAL SHELFICE_massmin_truedens
+      LOGICAL SHELFICE_conserve_ssh
       COMMON /SHELFICE_PARMS_L/
      &     SHELFICEisOn,
      &     useISOMIPTD,
@@ -210,18 +241,24 @@ CEOP
      &     SHELFICEuseGammaFrict,
      &     SHELFICE_oldCalcUStar,
      &     SHELFICEMassStepping,
-     &     SHELFICEDynMassOnly
+     &     SHELFICEDynMassOnly,
+     &     SHELFICE_massmin_truedens,
+     &     SHELFICE_conserve_ssh
 
       CHARACTER*(MAX_LEN_FNAM) SHELFICEloadAnomalyFile
       CHARACTER*(MAX_LEN_FNAM) SHELFICEmassFile
       CHARACTER*(MAX_LEN_FNAM) SHELFICEtopoFile
       CHARACTER*(MAX_LEN_FNAM) SHELFICEMassDynTendFile
       CHARACTER*(MAX_LEN_FNAM) SHELFICETransCoeffTFile
+      CHARACTER*(MAX_LEN_FNAM) SHELFICEMassTimeDepFile
+      CHARACTER*(MAX_LEN_FNAM) SHELFICEMassTendTimeDepFile
       COMMON /SHELFICE_PARM_C/
      &     SHELFICEloadAnomalyFile,
      &     SHELFICEmassFile,
      &     SHELFICEtopoFile,
      &     SHELFICEMassDynTendFile,
-     &     SHELFICETransCoeffTFile
+     &     SHELFICETransCoeffTFile,
+     &     SHELFICEMassTimeDepFile,
+     &     SHELFICEMassTendTimeDepFile	 
 
 #endif /* ALLOW_SHELFICE */

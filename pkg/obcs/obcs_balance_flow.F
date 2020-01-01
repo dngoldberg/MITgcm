@@ -24,8 +24,16 @@ C     === Global variables ===
 #include "OBCS_PARAMS.h"
 #include "OBCS_GRID.h"
 #include "OBCS_FIELDS.h"
+<<<<<<< HEAD
+C KS16------------------------------------------
+# ifdef ALLOW_SHELFICE
+#  include "SHELFICE.h"
+#  include "SHELFICE_COST.h"
+# endif
+=======
 #include "FFIELDS.h"
 
+>>>>>>> branch_remeshing
 
 C     !INPUT/OUTPUT PARAMETERS:
       _RL myTime
@@ -53,8 +61,13 @@ C     msgBuf       :: Informational/error message buffer
       _RL tileAreaOB(nSx,nSy)
       _RL tileInFlow(nSx,nSy)
       LOGICAL flag
+<<<<<<< HEAD
+C     KS16-- add params -----------
+      _RL SEALEVEL, ETA
+=======
       _RL netFreshWaterFlux
       _RL shelfIceNetMassFlux
+>>>>>>> branch_remeshing
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 C-- Old method (OBCS_balanceFac < 0): balance each OB separately
@@ -337,6 +350,23 @@ C     and correct each OB using corresponding weight factor OBCS_balanceFac
           CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
      &                        SQUEEZE_RIGHT, myThid )
         ENDIF
+
+C    KS16 is adding a velocity adjustment here --------------------
+C    I need the sealevel average values, restore mean sealevel to 0 for
+C    now? Or should that be a variable too?
+#ifdef ALLOW_SHELFICE
+        IF ( SHELFICE_conserve_ssh ) THEN
+          SEALEVEL = 0. _d 0
+          ETA = 0. _d 0
+          CALL SHELFICE_SEA_LEVEL_AVG( SEALEVEL,ETA, myThid )
+C    Restore the open ocean ETA sum to 0
+          IF (ETA .NE. 0. _d 0) THEN
+              inFlow = inFlow + ETA/deltaT
+          ENDIF
+        ENDIF
+#endif /* ALLOW_SHELFICE */
+C     KS16 end-----------------------------------------------------
+
         IF ( OBCSbalanceSurf ) THEN
          inFlow = inFlow + netFreshWaterFlux*mass2rUnit
 #ifdef ALLOW_SHELFICE
@@ -344,6 +374,7 @@ C     and correct each OB using corresponding weight factor OBCS_balanceFac
      &        inFlow = inFlow + shelfIceNetMassFlux*mass2rUnit
 #endif
         ENDIF
+>>>>>>> branch_remeshing
         inFlow = inFlow / areaOB
       ENDIF
       IF ( OBCS_balanceFacE.GE.0. ) flowE =  inFlow*OBCS_balanceFacE

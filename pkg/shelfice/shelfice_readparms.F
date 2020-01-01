@@ -63,6 +63,17 @@ CEOP
      &     SHELFICEuseGammaFrict, SHELFICE_oldCalcUStar,
      &     shiCdrag, shiZetaN, shiRc,
      &     shiPrandtl, shiSchmidt, shiKinVisc,
+<<<<<<< HEAD
+     &     SHELFICERemeshFrequency, SHELFICESplitThreshold,
+     &     SHELFICEMergeThreshold, SHELFICErealfwflux,
+     &     SHELFICE_massmin_truedens,
+     &     SHELFICE_conserve_ssh,
+     &     SHELFICEMassTimeDepFile,
+     &     SHELFICEMassTendTimeDepFile,
+     &     SHELFICE_forcing_period,
+     &     SHELFICEdepthMinMelt
+=======
+>>>>>>> branch_remeshing
 #ifdef ALLOW_COST
      &     mult_shelfice,
      &     mult_shifwflx, wshifwflx0, shifwflx_errfile,
@@ -97,11 +108,15 @@ C Set defaults values for parameters in SHELFICE.h
       SHI_withBL_uStarTopDz    = .FALSE.
       SHELFICEMassStepping     = .FALSE.
       SHELFICEDynMassOnly      = .FALSE.
+      SHELFICE_conserve_ssh    = .FALSE.
+      SHELFICE_massmin_truedens= .TRUE.
       SHELFICEtopoFile         = ' '
       SHELFICEmassFile         = ' '
       SHELFICEloadAnomalyFile  = ' '
       SHELFICEMassDynTendFile  = ' '
       SHELFICETransCoeffTFile  = ' '
+      SHELFICEMassTimeDepFile  = ' '
+      SHELFICEMassTendTimeDepFile  = ' '
       SHELFICElatentHeat       =  334.0 _d 3
       SHELFICEHeatCapacity_Cp  = 2000.0 _d 0
       rhoShelfIce              =  917.0 _d 0
@@ -119,6 +134,8 @@ C Set defaults values for parameters in SHELFICE.h
       SHELFICEadvDiffHeatFlux  = .FALSE.
       SHELFICEuseGammaFrict    = .FALSE.
       SHELFICE_oldCalcUStar    = .FALSE.
+      SHELFICE_forcing_period  = 0.  
+      SHELFICEdepthMinMelt     = 0.
       SHELFICEremeshFrequency  = 0.
       SHELFICEsplitThreshold   = hFacMin*1.1 _d 0 + 1. _d 0
       SHELFICEmergeThreshold   = hFacMin*0.9 _d 0

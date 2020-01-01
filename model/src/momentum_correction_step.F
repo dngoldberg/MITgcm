@@ -40,6 +40,7 @@ C     == Global variables ===
 #include "ZONAL_FILT.h"
 #endif
 
+
 C     !INPUT/OUTPUT PARAMETERS:
 C     myTime :: Current time in simulation
 C     myIter :: Current iteration number in simulation
@@ -88,6 +89,13 @@ C-      Update velocity fields:  V(n) = V** - dt * grad Eta
      I         bi, bj, iMin, iMax, jMin, jMax,
      I         phiSurfX, phiSurfY,
      I         myTime, myIter, myThid )
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+C-      Update porous flux fields
+          CALL CORRECTION_PRESS_RELEASE( 
+     I         bi, bj, iMin, iMax, jMin, jMax,
+     I         phiSurfX, phiSurfY,
+     I         myTime, myThid )
+#endif
         ENDIF
 
 #ifdef ALLOW_OBCS

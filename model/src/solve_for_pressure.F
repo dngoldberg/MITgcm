@@ -177,6 +177,11 @@ C       del_i { Sum_k [ rhoFac.(dr.hFac).(dy.deepFac).(u*) ] }  / deltaT
      U                       cg2d_b, cg3d_b,
      I                       myThid )
         ENDDO
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+        CALL ADJUST_GHAT_PRESS_RELEASE(
+     U                cg2d_b,
+     I                bi,bj,myThid)
+#endif
        ENDDO
       ENDDO
 

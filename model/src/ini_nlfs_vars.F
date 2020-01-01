@@ -146,10 +146,17 @@ C-- Compute the mimimum value of r_surf (used for computing hFac_surfC)
              IF ( ks.EQ.kSurfS(i,j+1,bi,bj))
      &          Rmin_tmp = MAX(Rmin_tmp, R_low(i,j+1,bi,bj))
 
+#if defined(ALLOW_SHELFICE) && defined(ALLOW_SHELFICE_GROUNDED_ICE)
+            Rmin_surf(i,j,bi,bj) =
+     &       R_low(i,j,bi,bj) + hFacInf*drF(ks)
+!             Rmin_surf(i,j,bi,bj) =
+!     &        MAX(rF(ks+1),R_low(i,j,bi,bj)) + hFacInf*drF(ks)
+#else
              Rmin_surf(i,j,bi,bj) =
      &        MAX( MAX(rF(ks+1),R_low(i,j,bi,bj)) + hFacInf*drF(ks),
      &                                Rmin_tmp + hFacInfMOM*drF(ks)
      &           )
+#endif
            ENDIF
           ENDDO
          ENDDO

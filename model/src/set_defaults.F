@@ -289,6 +289,13 @@ C--   Elliptic solver parameters
       cg3dTargetResidual = 1. _d -7
       cg3dChkResFreq     = 1
       useSRCGSolver      = .FALSE.
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+      cg2dMinColumnEps = 0. _d 0
+      pReleaseVisc = 0. _d 0
+#ifdef ALLOW_DAMP_THINCOLUMN
+      thinColDamp = 0. _d 0
+#endif
+#endif
 
 C--   Time stepping parameters
       deltaT            = 0. _d 0

@@ -794,6 +794,10 @@ C     tCylOut       :: Temperature of the cylinder outer boundary
 C     phiEuler      :: Euler angle, rotation about original z-axis
 C     thetaEuler    :: Euler angle, rotation about new x-axis
 C     psiEuler      :: Euler angle, rotation about new z-axis
+C     cg2dMinColumnEps :: threshold column thickness for darcy flow parameterisation
+C                         and thin column drag/damping
+C     pReleaseVisc  :: diffusivity parameter for darcy flow
+C     thinColDamp  :: implicit drag/damping parameter for thin columns
       COMMON /PARM_R/ cg2dTargetResidual, cg2dTargetResWunit,
      & cg2dpcOffDFac, cg3dTargetResidual,
      & delR, delRc, xgOrigin, ygOrigin, rSphere, recip_rSphere,
@@ -839,6 +843,13 @@ C     psiEuler      :: Euler angle, rotation about new z-axis
      & smoothAbsFuncRange,
      & tCylIn, tCylOut,
      & phiEuler, thetaEuler, psiEuler
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+     & ,cg2dMinColumnEps, pReleaseVisc
+#ifdef ALLOW_DAMP_THINCOLUMN
+     & ,thinColDamp
+#endif
+#endif
+
 
       _RL cg2dTargetResidual
       _RL cg2dTargetResWunit
@@ -980,6 +991,12 @@ C     psiEuler      :: Euler angle, rotation about new z-axis
       _RL nh_Am2
       _RL tCylIn, tCylOut
       _RL phiEuler, thetaEuler, psiEuler
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+      _RL cg2dMinColumnEps, pReleaseVisc
+#ifdef ALLOW_DAMP_THINCOLUMN
+      _RL thinColDamp
+#endif	  
+#endif
 
 C--   COMMON /PARM_A/ Thermodynamics constants ?
       COMMON /PARM_A/ HeatCapacity_Cp

@@ -536,6 +536,13 @@ C    &          *recip_deepFac2C(k)*recip_rhoFacC(k)
       ENDIF
 #endif /* ALLOW_ADDFLUID */
 
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+      CALL PRESSURE_RELEASE_THETA(
+     U                       gT_arr,
+     I                       iMin,iMax,jMin,jMax, k, bi,bj,
+     I                       myTime, myIter, myThid )
+#endif
+
 #ifdef ALLOW_FRICTION_HEATING
       IF ( addFrictionHeating ) THEN
         IF ( fluidIsAir ) THEN
@@ -900,6 +907,13 @@ C    &          *recip_deepFac2C(k)*recip_rhoFacC(k)
        ENDIF
       ENDIF
 #endif /* ALLOW_ADDFLUID */
+
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+      CALL PRESSURE_RELEASE_SALT(
+     U                       gS_arr,
+     I                       iMin,iMax,jMin,jMax, k, bi,bj,
+     I                       myTime, myIter, myThid )
+#endif
 
 C     Ocean: Add salinity surface forcing (e.g., fresh-water) in surface level
       IF ( k .EQ. kSurface ) THEN

@@ -54,11 +54,23 @@ C     i,j, bi,bj  :: loop indices
          DO bi = myBxLo(myThid), myBxHi(myThid)
           DO j=1-OLy,sNy+OLy-1
            DO i=1-OLx+1,sNx+OLx-1
-            IF ( streamice_hmask(i,j,bi,bj).EQ.1 .OR.
-     &           streamice_hmask(i,j,bi,bj).EQ.2 ) THEN
+!<<<<<<< HEAD
+            if (streamice_hmask(i,j,bi,bj).eq.1) then
              shelficeMass(i,j,bi,bj) =
-     &        H_streamice(i,j,bi,bj) * streamice_density
-            ENDIF
+     &        H_streamice(I,J,bi,bj) * streamice_density
+! DNG: change to average ice mass over a partly covered cell
+            elseif (streamice_hmask(i,j,bi,bj).eq.2) then
+             shelficeMass(i,j,bi,bj) =
+     &        H_streamice(I,J,bi,bj) * streamice_density
+     &        * area_shelf_streamice(i,j,bi,bj)*recip_rA(i,j,bi,bj)
+            endif
+!=======
+!            IF ( streamice_hmask(i,j,bi,bj).EQ.1 .OR.
+!     &           streamice_hmask(i,j,bi,bj).EQ.2 ) THEN
+!             shelficeMass(i,j,bi,bj) =
+!     &        H_streamice(i,j,bi,bj) * streamice_density
+!            ENDIF
+!>>>>>>> branch_remeshing
            ENDDO
           ENDDO
          ENDDO
@@ -69,8 +81,8 @@ C     i,j, bi,bj  :: loop indices
 
         DO bj = myByLo(myThid), myByHi(myThid)
          DO bi = myBxLo(myThid), myBxHi(myThid)
-          DO j=1-OLy,sNy+OLy
-           DO i=1-OLx,sNx+OLx
+          DO j=1,sNy
+           DO i=1,sNx
 
             IF ( .NOT.SHELFICEDynMassOnly ) THEN
              shelficeMass(i,j,bi,bj) = shelficeMass(i,j,bi,bj)

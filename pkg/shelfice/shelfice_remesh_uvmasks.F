@@ -249,16 +249,18 @@ C--   Calculate surface k index for interface W & S (U & V points)
            IF (hFacW(i,j,k,bi,bj).NE.zeroRS) kSurfW(i,j,bi,bj) = k
            IF (hFacS(i,j,k,bi,bj).NE.zeroRS) kSurfS(i,j,bi,bj) = k
           ENDDO
-!          maskInW(i,j,bi,bj)= 0.
-!          IF ( kSurfW(i,j,bi,bj).LE.Nr ) maskInW(i,j,bi,bj)= 1.
-!          maskInS(i,j,bi,bj)= 0.
-!          IF ( kSurfS(i,j,bi,bj).LE.Nr ) maskInS(i,j,bi,bj)= 1.
+          maskInW(i,j,bi,bj)= 0.
+          IF ( kSurfW(i,j,bi,bj).LE.Nr ) maskInW(i,j,bi,bj)= 1.
+          maskInS(i,j,bi,bj)= 0.
+          IF ( kSurfS(i,j,bi,bj).LE.Nr ) maskInS(i,j,bi,bj)= 1.
 ! DNG do not need to update these for vertical remeshing
 ! DNG but will need to update for horizontal remeshing
          ENDDO
         ENDDO
        ENDDO
       ENDDO
+
+      CALL EXCH_UV_XY_RS( maskInW, maskInS, .FALSE., myThid )
 
       ELSE
 

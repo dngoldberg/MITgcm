@@ -246,6 +246,12 @@ C--   Elliptic solver parameters
      & cg2dpcOffDFac, cg2dPreCondFreq,
      & cg3dMaxIters, cg3dChkResFreq, cg3dTargetResidual,
      & useSRCGSolver, printResidualFreq
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+     & ,cg2dMinColumnEps, pReleaseVisc
+#ifdef ALLOW_DAMP_THINCOLUMN
+     & ,thinColDamp
+#endif
+#endif
 
 C--   Time stepping parammeters
       NAMELIST /PARM03/

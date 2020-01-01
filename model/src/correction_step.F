@@ -1,5 +1,8 @@
 #include "PACKAGES_CONFIG.h"
 #include "CPP_OPTIONS.h"
+#ifdef ALLOW_SHELFICE
+# include "SHELFICE_OPTIONS.h"
+#endif
 
 CBOP
 C     !ROUTINE: CORRECTION_STEP
@@ -29,6 +32,11 @@ C     == Global variables ==
 #ifdef ALLOW_DIAGNOSTICS
 # include "FFIELDS.h"
 #endif
+
+!DNG
+#include "SURFACE.h"
+
+
 
 C     !INPUT/OUTPUT PARAMETERS:
 C     == Routine Arguments ==
@@ -64,6 +72,16 @@ C     gV_dpy       :: implicit part of pressure gradient tendency
       _RL     psFac, nhFac
       _RL     gU_dpx(1-OLx:sNx+OLx,1-OLy:sNy+OLy)
       _RL     gV_dpy(1-OLx:sNx+OLx,1-OLy:sNy+OLy)
+#ifdef ALLOW_SHELFICE_GROUNDED_ICE
+      _RL     mask_eff
+#endif
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+#ifdef ALLOW_DAMP_THINCOLUMN
+      _RL drag_fac 
+  
+      drag_fac = 0. _d 0
+#endif
+#endif
 #ifdef ALLOW_DIAGNOSTICS
       LOGICAL dPhiDiagIsOn, implDisDiagIsOn
       _RL tmpFac
@@ -210,9 +228,32 @@ C     Pressure gradient tendency (merid mom): Implicit part
 C     Update zonal velocity: add implicit pressure gradient tendency
        DO j=jMin,jMax
         DO i=iMin,iMax
+#ifdef ALLOW_SHELFICE_GROUNDED_ICE
+          mask_eff = 1. _d 0
+          IF (hFacW(i,j,k,bi,bj).le.0.0) THEN
+           mask_eff = 0. _d 0
+          ENDIF
+#endif
+#if (defined ALLOW_PRESSURE_RELEASE_CODE && defined ALLOW_DAMP_THINCOLUMN)
+          IF (depthColW(i,j,bi,bj).lt.cg2dminColumnEps) THEN        
+           drag_fac = _recip_hFacW(i,j,k,bi,bj)**2*recip_drF(k)**2*
+     &       thinColDamp * viscArNr(k) * 
+     &       1./(1+exp(-10./cg2dminColumnEps*
+     &        (-1.)*(depthColW(i,j,bi,bj)-cg2dminColumnEps/2)))
+          ELSE
+           drag_fac = 0. _d 0
+          ENDIF
+#endif
           uVel(i,j,k,bi,bj)=( gU(i,j,k,bi,bj)
      &                      + deltaTMom*gU_dpx(i,j)
      &                      )*_maskW(i,j,k,bi,bj)
+#if (defined ALLOW_PRESSURE_RELEASE_CODE && defined ALLOW_DAMP_THINCOLUMN)
+     &       /(1+deltaTmom*drag_fac)
+#endif
+#ifdef ALLOW_SHELFICE_GROUNDED_ICE
+     &                      * mask_eff
+#endif
+
 #ifdef ALLOW_OBCS
      &                       *maskInW(i,j,bi,bj)
 #endif
@@ -222,9 +263,31 @@ C     Update zonal velocity: add implicit pressure gradient tendency
 C     Update merid. velocity: add implicit pressure gradient tendency
        DO j=jMin,jMax
         DO i=iMin,iMax
+#ifdef ALLOW_SHELFICE_GROUNDED_ICE
+          mask_eff = 1. _d 0
+          IF (hFacS(i,j,k,bi,bj).le.0.0) THEN
+           mask_eff = 0. _d 0
+          ENDIF
+#endif
+#if (defined ALLOW_PRESSURE_RELEASE_CODE && defined ALLOW_DAMP_THINCOLUMN)
+          IF (depthColS(i,j,bi,bj).lt.cg2dminColumnEps) THEN        
+           drag_fac = _recip_hFacS(i,j,k,bi,bj)**2*recip_drF(k)**2*
+     &       thinColDamp * viscArNr(k) * 
+     &       1./(1+exp(-10./cg2dminColumnEps*
+     &        (-1.)*(depthColS(i,j,bi,bj)-cg2dminColumnEps/2)))
+          ELSE
+           drag_fac = 0. _d 0
+          ENDIF
+#endif
           vVel(i,j,k,bi,bj)=( gV(i,j,k,bi,bj)
      &                      + deltaTMom*gV_dpy(i,j)
      &                      )*_maskS(i,j,k,bi,bj)
+#if (defined ALLOW_PRESSURE_RELEASE_CODE && defined ALLOW_DAMP_THINCOLUMN)
+     &       /(1+deltaTmom*drag_fac)
+#endif
+#ifdef ALLOW_SHELFICE_GROUNDED_ICE
+     &                      * mask_eff
+#endif
 #ifdef ALLOW_OBCS
      &                       *maskInS(i,j,bi,bj)
 #endif

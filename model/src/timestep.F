@@ -1,5 +1,8 @@
 #include "PACKAGES_CONFIG.h"
 #include "CPP_OPTIONS.h"
+#ifdef ALLOW_SHELFICE
+#include "SHELFICE_OPTIONS.h"
+#endif
 #ifdef ALLOW_CD_CODE
 #include "CD_CODE_OPTIONS.h"
 #endif
@@ -304,12 +307,30 @@ C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
         DO j=jMin,jMax
          DO i=iMin,iMax
           IF ( k.EQ.kSurfW(i,j,bi,bj) ) THEN
+!DNG AVOID DIV BY ZERO
+#ifdef ALLOW_SHELFICE_GROUNDED_ICE
+           IF (hFac_surfW(i,j,bi,bj).LE.0.0) THEN
+            gUtmp(i,j) = 0. _d 0
+           ELSE
+#endif
            gUtmp(i,j) = gUtmp(i,j)
      &         *_hFacW(i,j,k,bi,bj)/hFac_surfW(i,j,bi,bj)
+#ifdef ALLOW_SHELFICE_GROUNDED_ICE
+           ENDIF
+#endif
           ENDIF
           IF ( k.EQ.kSurfS(i,j,bi,bj) ) THEN
+!DNG AVOID DIV BY ZERO
+#ifdef ALLOW_SHELFICE_GROUNDED_ICE
+           IF (hFac_surfS(i,j,bi,bj).LE.0.0) THEN
+            gVtmp(i,j) = 0. _d 0
+           ELSE
+#endif
            gVtmp(i,j) = gVtmp(i,j)
      &         *_hFacS(i,j,k,bi,bj)/hFac_surfS(i,j,bi,bj)
+#ifdef ALLOW_SHELFICE_GROUNDED_ICE
+           ENDIF
+#endif
           ENDIF
          ENDDO
         ENDDO

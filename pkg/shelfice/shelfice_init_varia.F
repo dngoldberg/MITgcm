@@ -19,6 +19,9 @@ C     === Global variables ===
 #ifdef ALLOW_COST
 # include "SHELFICE_COST.h"
 #endif /* ALLOW_COST */
+#ifdef ALLOW_SHELFICE_GROUNDED_ICE
+# include "SURFACE.h"
+#endif
 
 C     === Routine arguments ===
 C     myThid -  Number of this instance of SHELFICE_INIT_VARIA
@@ -29,6 +32,10 @@ CEndOfInterface
 C     === Local variables ===
 C     i,j,bi,bj - Loop counters
       INTEGER i, j, bi, bj
+#ifdef ALLOW_SHELFICE_GROUNDED_ICE
+      INTEGER ks
+#endif
+
 CEOP
 
       DO bj = myByLo(myThid), myByHi(myThid)
@@ -42,6 +49,9 @@ CEOP
           shiTransCoeffT        (i,j,bi,bj) = 0. _d 0
           shiTransCoeffS        (i,j,bi,bj) = 0. _d 0
           shelficeMass          (i,j,bi,bj) = 0. _d 0
+#ifdef ALLOW_SHELFICE_GROUNDED_ICE
+          R_MWCT                (i,j,bi,bj) = 0. _d 0
+#endif
          ENDDO
         ENDDO
        ENDDO
@@ -86,10 +96,31 @@ C     set coefficients to constant values
        ENDDO
       ENDDO
 
-      IF ( SHELFICEMassStepping .AND.
-     &     ( nIter0.NE.0 .OR. startTime.NE.baseTime
-     &                   .OR. pickupSuff.NE.' ') ) THEN
-        CALL SHELFICE_READ_PICKUP( 1, nIter0, myThid )
+      IF (shelficeMassStepping) THEN
+
+      IF ( .NOT. ( startTime .EQ. baseTime .AND.  nIter0 .EQ. 0
+     &     .AND. pickupSuff .EQ. ' ') ) THEN
+
+          CALL SHELFICE_READ_PICKUP ( myThid )
+
+#ifdef ALLOW_SHELFICE_REMESHING
+!       DNG -- if R_shelfice is read from a pickup then 
+!       ro_surf must be initialised to R_shelfice
+!       (an issue even without grounded ice)
+          IF ( usingZCoords ) THEN
+           DO bj=myByLo(myThid), myByHi(myThid)
+            DO bi=myBxLo(myThid), myBxHi(myThid)
+             DO j=1-OLy,sNy+OLy
+              DO i=1-OLx,sNx+OLx
+               ro_surf(i,j,bi,bj) =
+     &          R_shelfIce(i,j,bi,bj) 
+              ENDDO
+             ENDDO
+            ENDDO
+           ENDDO
+          ENDIF
+#endif
+
       ENDIF
 
 #ifdef ALLOW_COST
@@ -112,6 +143,44 @@ c--
        ENDDO
       ENDDO
 #endif /* ALLOW_COST */
+
+#ifdef ALLOW_SHELFICE_GROUNDED_ICE
+
+C-- Compute the mimimum water column thickness under 
+C-- grounded ice
+      DO bj = myByLo(myThid), myByHi(myThid)
+       DO bi = myBxLo(myThid), myBxHi(myThid)
+        DO j=1-OLy,sNy+OLy
+         DO i=1-OLx,sNx+OLx
+          IF(maskInC(i,j,bi,bj).eq.1) THEN
+           R_MWCT(i,j,bi,bj) =
+     &      2.0*hfacmin*drF(kLowC(i,j,bi,bj))
+          ENDIF
+         ENDDO
+        ENDDO
+       ENDDO
+      ENDDO
+
+C-- Compute the mimimum value of r_surf (used for computing hFac_surfC)
+C --This is meant to override an earlier def'n (CHECK THIS)
+      DO bj=myByLo(myThid), myByHi(myThid)
+       DO bi=myBxLo(myThid), myBxHi(myThid)
+        DO j=1,sNy
+         DO i=1,sNx
+          ks = kSurfC(i,j,bi,bj)
+           IF (ks.le.Nr) THEN
+            Rmin_surf(i,j,bi,bj) =
+!     &       R_low(i,j,bi,bj) + hFacInf*drF(ks)
+     &       MAX(rF(ks+1),R_low(i,j,bi,bj)) + hFacInf*drF(ks)
+           ENDIF
+         ENDDO
+        ENDDO
+       ENDDO
+      ENDDO
+
+      _EXCH_XY_RL (Rmin_surf, myThid)
+
+#endif
 
 #endif /* ALLOW_SHELFICE */
 

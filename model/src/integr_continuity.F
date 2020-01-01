@@ -61,7 +61,7 @@ C     hDivFlow :: Div. Barotropic Flow [transport unit m3/s]
       _RL uTrans(1-OLx:sNx+OLx,1-OLy:sNy+OLy)
       _RL vTrans(1-OLx:sNx+OLx,1-OLy:sNy+OLy)
       _RL hDivFlow(1-OLx:sNx+OLx,1-OLy:sNy+OLy)
-      _RL facEmP, facMass
+      _RL facEmP, facMass, tmpDiff, tmpDiff2
 #else /* EXACT_CONSERV */
 # ifdef ALLOW_OBCS
       INTEGER i, j
@@ -131,6 +131,19 @@ C-    Integrate vertically the Horizontal Divergence
 
 C-    End DO k=1,Nr
        ENDDO
+   
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+       DO j=1,sNy
+        DO i=1,sNx
+           hDivFlow(i,j) = hDivFlow(i,j)
+     &       +maskinC(i,j,bi,bj)*_dyG(i,j,bi,bj)*
+     &       (pReleaseTransX(i+1,j,bi,bj)-pReleaseTransX(i,j,bi,bj))
+           hDivFlow(i,j) = hDivFlow(i,j)
+     &       +maskinC(i,j,bi,bj)*_dxG(i,j,bi,bj)*
+     &       (pReleaseTransY(i,j+1,bi,bj)-pReleaseTransY(i,j,bi,bj))
+        ENDDO
+       ENDDO
+#endif
 
 C------------------------------------
 C note: deep-model not implemented for P-coordinate + realFreshWaterFlux ;
@@ -205,6 +218,20 @@ C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 C--   Update etaN at the end of the time step :
 C     Incorporate the Implicit part of -Divergence(Barotropic_Flow)
 
+
+       tmpDiff = 0.0
+        DO j=2,sNy
+         DO i=1,sNx
+          tmpDiff2 = 
+     &     abs(etaN(i,j,bi,bj)-etaH(i,j,bi,bj) -
+     &         implicDiv2Dflow*dEtaHdt(i,j,bi,bj)*
+     &         deltaTfreesurf)
+          if (tmpDiff2 .gt. tmpDiff) then
+           tmpDiff = tmpDiff2
+          endif
+         ENDDO
+        ENDDO
+
        IF (implicDiv2Dflow.EQ. 0. _d 0) THEN
         DO j=1-OLy,sNy+OLy
          DO i=1-OLx,sNx+OLx
@@ -219,6 +246,8 @@ C     Incorporate the Implicit part of -Divergence(Barotropic_Flow)
          ENDDO
         ENDDO
        ENDIF
+
+
 
 #ifdef ALLOW_OBCS
 C--    Was added on Dec 30, 2004 (to fix unrealistic etaN ?), but no longer

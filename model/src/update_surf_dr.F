@@ -1,4 +1,7 @@
 #include "CPP_OPTIONS.h"
+#ifdef ALLOW_SHELFICE
+# include "SHELFICE_OPTIONS.h"
+#endif
 
 CBOP
 C     !ROUTINE: UPDATE_SURF_DR
@@ -21,6 +24,7 @@ C     == Global variables
 #include "PARAMS.h"
 #include "GRID.h"
 #include "SURFACE.h"
+#include "DYNVARS.h"
 
 C     !INPUT/OUTPUT PARAMETERS:
 C     == Routine arguments ==
@@ -67,7 +71,17 @@ C-- Update fractional thickness "hFacW" & "hFacS" (at U and V points)
           ks = kSurfW(i,j,bi,bj)
           IF (ks.LE.Nr) THEN
            hFacW(i,j,ks,bi,bj) = hFac_surfW(i,j,bi,bj)
+#if (defined ALLOW_SHELFICE_REMESHING && \
+     defined ALLOW_SHELFICE_GROUNDED_ICE)
+           IF (hFac_surfW(i,j,bi,bj) .LE. 0.0) THEN
+            recip_hFacW(i,j,ks,bi,bj)= 0. _d 0
+           ELSE
+#endif
            recip_hFacW(i,j,ks,bi,bj)= 1. _d 0 / hFac_surfW(i,j,bi,bj)
+#if (defined ALLOW_SHELFICE_REMESHING && \
+     defined ALLOW_SHELFICE_GROUNDED_ICE)
+           ENDIF
+#endif
           ENDIF
          ENDDO
         ENDDO
@@ -76,7 +90,17 @@ C-- Update fractional thickness "hFacW" & "hFacS" (at U and V points)
           ks = kSurfS(i,j,bi,bj)
           IF (ks.LE.Nr) THEN
            hFacS(i,j,ks,bi,bj) = hFac_surfS(i,j,bi,bj)
+#if (defined ALLOW_SHELFICE_REMESHING && \
+     defined ALLOW_SHELFICE_GROUNDED_ICE)
+           IF (hFac_surfS(i,j,bi,bj) .LE. 0.0) THEN
+            recip_hFacS(i,j,ks,bi,bj)= 0. _d 0
+           ELSE
+#endif
            recip_hFacS(i,j,ks,bi,bj)= 1. _d 0 / hFac_surfS(i,j,bi,bj)
+#if (defined ALLOW_SHELFICE_REMESHING && \
+     defined ALLOW_SHELFICE_GROUNDED_ICE)
+           ENDIF
+#endif
           ENDIF
          ENDDO
         ENDDO
@@ -103,7 +127,17 @@ C-- Update fractional thickness "hFacW" & "hFacS" (at U and V points)
           ks = kSurfW(i,j,bi,bj)
           IF (ks.LE.Nr) THEN
            hFacW(i,j,ks,bi,bj) = hFac_surfNm1W(i,j,bi,bj)
+#if (defined ALLOW_SHELFICE_REMESHING && \
+     defined ALLOW_SHELFICE_GROUNDED_ICE)
+           IF (hFac_surfNm1W(i,j,bi,bj) .LE. 0. _d 0) THEN
+            recip_hFacW(i,j,ks,bi,bj)= 0. _d 0
+           ELSE
+#endif
            recip_hFacW(i,j,ks,bi,bj)= 1. _d 0 / hFac_surfNm1W(i,j,bi,bj)
+#if (defined ALLOW_SHELFICE_REMESHING && \
+     defined ALLOW_SHELFICE_GROUNDED_ICE)
+           ENDIF
+#endif
           ENDIF
          ENDDO
         ENDDO
@@ -112,7 +146,17 @@ C-- Update fractional thickness "hFacW" & "hFacS" (at U and V points)
           ks = kSurfS(i,j,bi,bj)
           IF (ks.LE.Nr) THEN
            hFacS(i,j,ks,bi,bj) = hFac_surfNm1S(i,j,bi,bj)
+#if (defined ALLOW_SHELFICE_REMESHING && \
+     defined ALLOW_SHELFICE_GROUNDED_ICE)
+           IF (hFac_surfNm1S(i,j,bi,bj) .LE. 0. _d 0) THEN
+            recip_hFacS(i,j,ks,bi,bj)= 0. _d 0
+           ELSE
+#endif
            recip_hFacS(i,j,ks,bi,bj)= 1. _d 0 / hFac_surfNm1S(i,j,bi,bj)
+#if (defined ALLOW_SHELFICE_REMESHING && \
+     defined ALLOW_SHELFICE_GROUNDED_ICE)
+           ENDIF
+#endif
           ENDIF
          ENDDO
         ENDDO
@@ -137,6 +181,46 @@ C-- Update fractional thickness "hFacW" & "hFacS" (at U and V points)
 C- end bi,bj loop
        ENDDO
       ENDDO
+
+
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+      DO bj=myByLo(myThid), myByHi(myThid)
+       DO bi=myBxLo(myThid), myBxHi(myThid)
+        DO J=1-OLy,sNy+OLy
+         DO I=1-OLx,sNx+OLx
+
+          depthColW(i,j,bi,bj) = 0.0
+          depthColS(i,j,bi,bj) = 0.0
+
+         ENDDO
+        ENDDO
+       ENDDO
+      ENDDO
+      DO K=1, Nr
+       DO bj=myByLo(myThid), myByHi(myThid)
+        DO bi=myBxLo(myThid), myBxHi(myThid)
+         DO J=1-OLy,sNy+OLy
+          DO I=1-OLx,sNx+OLx
+
+           depthColW(i,j,bi,bj) = 
+     &      depthColW(i,j,bi,bj) + 
+     &      drF(k) * hFacW(i,j,k,bi,bj) 
+           depthColS(i,j,bi,bj) = 
+     &      depthColS(i,j,bi,bj) + 
+     &      drF(k) * hFacS(i,j,k,bi,bj)
+
+          ENDDO
+         ENDDO
+        ENDDO
+       ENDDO
+      ENDDO
+
+      _EXCH_XY_RL (depthColW, myThid)
+      _EXCH_XY_RL (depthColS, myThid)
+
+
+
+#endif
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 #endif /* NONLIN_FRSURF */

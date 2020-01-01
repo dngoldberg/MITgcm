@@ -46,6 +46,12 @@ C     myThid  :: Instance number for this call of CALC_DIV_GHAT
       _RL cg3d_b(1)
 #endif
       INTEGER myThid
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+#ifdef ALLOW_DAMP_THINCOLUMN
+      _RL drag_fac 
+#endif
+#endif
+  
 
 C     !LOCAL VARIABLES:
 C     == Local variables ==
@@ -57,6 +63,12 @@ C     pf     :: Intermediate array for building RHS source term.
       _RS yA (1-OLx:sNx+OLx,1-OLy:sNy+OLy)
       _RL pf (1-OLx:sNx+OLx,1-OLy:sNy+OLy)
 CEOP
+
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+#ifdef ALLOW_DAMP_THINCOLUMN
+      drag_fac = 0. _d 0
+#endif
+#endif
 
 C     Calculate vertical face areas
       DO j=1,sNy+1
@@ -77,7 +89,20 @@ C     pulls div(U) + dh/dt back toward zero.
 C     Fully Implicit treatment of the Barotropic Flow Divergence
         DO j=1,sNy
          DO i=1,sNx+1
+#if (defined ALLOW_PRESSURE_RELEASE_CODE && defined ALLOW_DAMP_THINCOLUMN)
+          IF (depthColW(i,j,bi,bj).lt.cg2dminColumnEps) THEN        
+           drag_fac = _recip_hFacW(i,j,k,bi,bj)**2*recip_drF(k)**2*
+     &      thinColDamp * viscArNr(k) * 
+     &        1./(1+exp(-10./cg2dminColumnEps*
+     &         (-1.)*(depthColW(i,j,bi,bj)-cg2dminColumnEps/2)))
+          ELSE
+           drag_fac = 0. _d 0
+          ENDIF
+#endif
           pf(i,j) = xA(i,j)*gU(i,j,k,bi,bj) / deltaTMom
+#if (defined ALLOW_PRESSURE_RELEASE_CODE && defined ALLOW_DAMP_THINCOLUMN)
+     &     / (1 + drag_fac*deltaTmom)  
+#endif
          ENDDO
         ENDDO
       ELSEIF (exactConserv) THEN
@@ -136,7 +161,20 @@ c#endif
 C     Fully Implicit treatment of the Barotropic Flow Divergence
         DO j=1,sNy+1
          DO i=1,sNx
+#if (defined ALLOW_PRESSURE_RELEASE_CODE && defined ALLOW_DAMP_THINCOLUMN)
+          IF (depthColS(i,j,bi,bj).lt.cg2dminColumnEps) THEN        
+           drag_fac = _recip_hFacS(i,j,k,bi,bj)**2*recip_drF(k)**2*
+     &      thinColDamp * viscArNr(k) * 
+     &        1./(1+exp(-10./cg2dminColumnEps*
+     &         (-1.)*(depthColS(i,j,bi,bj)-cg2dminColumnEps/2)))
+          ELSE
+           drag_fac = 0. _d 0
+          ENDIF
+#endif 
           pf(i,j) = yA(i,j)*gV(i,j,k,bi,bj) / deltatmom
+#if (defined ALLOW_PRESSURE_RELEASE_CODE && defined ALLOW_DAMP_THINCOLUMN)
+     &     / (1 + drag_fac*deltaTmom)     
+#endif
          ENDDO
         ENDDO
       ELSEIF (exactConserv) THEN

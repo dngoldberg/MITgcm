@@ -64,6 +64,11 @@ c    &     INT (myTime/ShelficeRemeshFrequency) .AND. myTime
 c    &      .NE. 0.0        ) THEN
          CALL SHELFICE_REMESH_C_MASK  ( myTime, myIter, myThid )
          CALL SHELFICE_REMESH_RMINSURF( myTime, myIter, myThid )
+#ifdef ALLOW_OBCS
+         if (useobcs) then
+         CALL OBCS_INIT_FIXED( myThid )
+         endif
+#endif
          CALL UPDATE_CG2D             ( myTime, myIter, myThid )
          CALL SHELFICE_REMESH_CALC_W( uVel, vVel, myThid )
        ENDIF

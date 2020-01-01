@@ -62,6 +62,14 @@ C           implicDiv2DFlow=1 => etaH=etaN ; =0 => etaH=etaN^(n-1);
       _RL  gsNm1(1-OLx:sNx+OLx,1-OLy:sNy+OLy,Nr,nSx,nSy)
 #endif /* ALLOW_ADAMSBASHFORTH_3 */
 
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+      COMMON /PRESS_RELEASE_R/
+     &  pReleaseTransX, pReleaseTransY, phiHydLowC
+      _RL pReleaseTransX (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RL pReleaseTransY (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+	  _RL phiHydLowC(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+#endif
+
 #ifdef USE_OLD_EXTERNAL_FORCING
       COMMON /DYNVARS_OLD/
      &                   gT,   gS
