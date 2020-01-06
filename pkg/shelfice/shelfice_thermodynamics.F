@@ -122,7 +122,6 @@ C     drKp1, recip_drLoc
 #endif
 
 #ifdef ALLOW_SHIFWFLX_CONTROL
-<<<<<<< HEAD
       _RL xx_shifwflx_loc(1-olx:snx+olx,1-oly:sny+oly,nsx,nsy)
 #endif
 
@@ -132,9 +131,6 @@ C     drKp1, recip_drLoc
       _RL effMass  (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL mass, shA, FACTOR1, FACTOR2
       LOGICAL massmin_truedens_temp
-=======
-      _RL xx_shifwflx_loc(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
->>>>>>> branch_remeshing
 #endif
 CEOP
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
@@ -394,103 +390,8 @@ C-    New (more accurate) averaging expression for uStar:
           ENDDO
          ENDDO
         ENDIF
-<<<<<<< HEAD
-C--  DNG: TOPDR averages U/V over boundary layer at U/V points, then averages
-C--  (as opposed to averaging horizontally then vertically)
-#ifdef SHI_USTAR_TOPDR
-c    Average at u- and v- points over deltaR. use later to override uLoc/vLoc
-        IF ( SHELFICEBoundaryLayer ) THEN
-         DO J = 1, sNy+1
-          DO I = 1, sNx+1
-           K = ksurfW(I,J,bi,bj)
-           Kp1 = K+1
-           IF (K.lt.Nr) then
-            drKp1 = drF(K)*(1. _d 0-_hFacW(I,J,K,bi,bj))
-            drKp1 = MIN( drKp1, drF(Kp1)*_hFacW(I,J,Kp1,bi,bj))
-            drKp1 = max (drKp1, 0. _d 0)
-            drLoc = (drF(K)*_hFacW(I,J,K,bi,bj)+drKp1)
-            IF (drLoc.gt.0.0) THEN
-             recip_drLoc = 1./drLoc
-            ELSE
-             recip_drLoc = 0.0
-            ENDIF
-            u_topdr(I,J,bi,bj) = 
-     &       (drF(K)*_hFacW(I,J,K,bi,bj)*uVel(I,J,K,bi,bj) + 
-     &        drKp1*uVel(I,J,Kp1,bi,bj)) 
-     &      * recip_drLoc
-C zero out u_topdr under grounded ice as uLoc is average of u_topdr
-C in adjacent cells.
-!#ifdef ALLOW_SHELFICE_GROUNDED_ICE
-!           u_topdr(i,j,bi,bj) =
-!     &       u_topdr(i,j,bi,bj)*(GrdFactor(i,j,bi,bj)*0.5+0.5)
-!#endif
-           ELSE
-            u_topdr(I,J,bi,bj) = 0. _d 0
-           ENDIF
-
-#ifdef ALLOW_PRESSURE_RELEASE_CODE
-           IF (depthColW(i,j,bi,bj) .GT. cg2dminColumnEps) THEN
-             IF (depthColW(i,j,bi,bj) .LT. 10.0) THEN
-               u_topdr(i,j,bi,bj) = u_topdr(i,j,bi,bj)*
-     &            (cos( (1 - (depthColW(i,j,bi,bj)-cg2dminColumnEps)
-     &                 /(shelficedepthminmelt-cg2dminColumnEps))*PI )
-     &            + 0. _d 0)
-             ENDIF
-           ELSE
-              u_topdr(i,j,bi,bj) = 0. _d 0
-           ENDIF
-#endif
-
-           
-           K = ksurfS(I,J,bi,bj)
-           Kp1 = K+1
-           IF (K.lt.Nr) then
-            drKp1 = drF(K)*(1. _d 0-_hFacS(I,J,K,bi,bj))
-            drKp1 = MIN( drKp1, drF(Kp1)*_hFacS(I,J,Kp1,bi,bj))
-            drKp1 = max (drKp1, 0. _d 0)
-            drLoc = (drF(K)*_hFacS(I,J,K,bi,bj)+drKp1)
-            IF (drLoc.gt.0.0) THEN
-             recip_drLoc = 1./drLoc
-            ELSE
-             recip_drLoc = 0.0
-            ENDIF
-            v_topdr(I,J,bi,bj) = 
-     &       (drF(K)*_hFacS(I,J,K,bi,bj)*vVel(I,J,K,bi,bj) + 
-     &        drKp1*vVel(I,J,Kp1,bi,bj)) 
-     &      * recip_drLoc
-C zero out v_topdr under grounded ice as uLoc is average of v_topdr
-C in adjacent cells.
-!#ifdef ALLOW_SHELFICE_GROUNDED_ICE
-!           v_topdr(i,j,bi,bj) =
-!     &       v_topdr(i,j,bi,bj)*(GrdFactor(i,j,bi,bj)*0.5+0.5)
-!#endif
-           ELSE
-            v_topdr(I,J,bi,bj) = 0. _d 0
-           ENDIF
-
-          ENDDO
-         ENDDO
-        ENDIF
-
-#ifdef ALLOW_PRESSURE_RELEASE_CODE
-           IF (depthColS(i,j,bi,bj) .GT. cg2dminColumnEps) THEN
-             IF (depthColS(i,j,bi,bj) .LT. 10.0) THEN
-               v_topdr(i,j,bi,bj) = v_topdr(i,j,bi,bj)*
-     &            (cos( (1 - (depthColS(i,j,bi,bj)-cg2dminColumnEps)
-     &                 /(shelficedepthminmelt-cg2dminColumnEps))*PI )
-     &            + 0. _d 0)
-             ENDIF
-           ELSE
-              v_topdr(i,j,bi,bj) = 0. _d 0
-           ENDIF
-#endif
-
-
-#endif
-=======
 #endif /* SHI_ALLOW_GAMMAFRICT */
 
->>>>>>> branch_remeshing
         IF ( SHELFICEBoundaryLayer ) THEN
 C--   average over boundary layer width
          DO J = 1, sNy
@@ -554,6 +455,20 @@ c    &           )*recip_drLoc
            ELSE
             uLoc(I,J) = 0. _d 0
            ENDIF
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+           IF (depthColW(i,j,bi,bj) .GT. cg2dminColumnEps) THEN
+             IF (depthColW(i,j,bi,bj) .LT. 10.0) THEN
+               u_topdr(i,j,bi,bj) = u_topdr(i,j,bi,bj)*
+     &            (cos( (1 - (depthColW(i,j,bi,bj)-cg2dminColumnEps)
+     &                 /(shelficedepthminmelt-cg2dminColumnEps))*PI )
+     &            + 0. _d 0)
+	           uLoc(I,J) = u_topdr(i,j,bi,bj)
+             ENDIF
+           ELSE
+              u_topdr(i,j,bi,bj) = 0. _d 0
+			  uLoc(I,J) = u_topdr(i,j,bi,bj)
+           ENDIF
+#endif
 
            K = kSurfS(I,J,bi,bj)
            IF (K.LT.Nr) THEN
@@ -575,6 +490,20 @@ c    &           )*recip_drLoc
            ELSE
             vLoc(I,J) = 0. _d 0
            ENDIF
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+           IF (depthColS(i,j,bi,bj) .GT. cg2dminColumnEps) THEN
+             IF (depthColS(i,j,bi,bj) .LT. 10.0) THEN
+               v_topdr(i,j,bi,bj) = v_topdr(i,j,bi,bj)*
+     &            (cos( (1 - (depthColS(i,j,bi,bj)-cg2dminColumnEps)
+     &                 /(shelficedepthminmelt-cg2dminColumnEps))*PI )
+     &            + 0. _d 0)
+	           vLoc(I,J) = v_topdr(i,j,bi,bj)
+             ENDIF
+           ELSE
+              v_topdr(i,j,bi,bj) = 0. _d 0
+			  vLoc(I,J) = v_topdr(i,j,bi,bj)
+           ENDIF
+#endif		   
 
           ENDDO
          ENDDO
