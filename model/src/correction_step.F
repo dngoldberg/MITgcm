@@ -75,18 +75,21 @@ C     gV_dpy       :: implicit part of pressure gradient tendency
 #ifdef ALLOW_SHELFICE_GROUNDED_ICE
       _RL     mask_eff
 #endif
-#ifdef ALLOW_PRESSURE_RELEASE_CODE
-#ifdef ALLOW_DAMP_THINCOLUMN
-      _RL drag_fac 
-  
-      drag_fac = 0. _d 0
-#endif
-#endif
 #ifdef ALLOW_DIAGNOSTICS
       LOGICAL dPhiDiagIsOn, implDisDiagIsOn
       _RL tmpFac
 #endif /* ALLOW_DIAGNOSTICS */
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+#ifdef ALLOW_DAMP_THINCOLUMN
+      _RL drag_fac 
+#endif
+#endif
 CEOP
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+#ifdef ALLOW_DAMP_THINCOLUMN
+      drag_fac = 0. _d 0
+#endif
+#endif
 
 #ifdef ALLOW_DIAGNOSTICS
       dPhiDiagIsOn = .FALSE.

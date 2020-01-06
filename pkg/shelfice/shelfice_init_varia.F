@@ -32,7 +32,7 @@ CEndOfInterface
 C     === Local variables ===
 C     i,j,bi,bj - Loop counters
       INTEGER i, j, bi, bj
-	  #ifdef ALLOW_SHELFICE_GROUNDED_ICE
+#ifdef ALLOW_SHELFICE_GROUNDED_ICE
       INTEGER ks
 #endif
 

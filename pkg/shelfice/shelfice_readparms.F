@@ -68,11 +68,13 @@ CEOP
      &     SHELFICEMassTimeDepFile,
      &     SHELFICEMassTendTimeDepFile,
      &     SHELFICE_forcing_period,
-     &     SHELFICEdepthMinMelt
+     &     SHELFICEdepthMinMelt,
 #ifdef ALLOW_COST
      &     mult_shelfice,
      &     mult_shifwflx, wshifwflx0, shifwflx_errfile,
 #endif
+     &     SHELFICEremeshFrequency,
+     &     SHELFICEsplitThreshold, SHELFICEmergeThreshold
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 
