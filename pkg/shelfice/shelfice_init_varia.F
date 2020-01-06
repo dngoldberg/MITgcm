@@ -19,9 +19,6 @@ C     === Global variables ===
 #ifdef ALLOW_COST
 # include "SHELFICE_COST.h"
 #endif /* ALLOW_COST */
-#ifdef ALLOW_SHELFICE_GROUNDED_ICE
-# include "SURFACE.h"
-#endif
 
 C     === Routine arguments ===
 C     myThid -  Number of this instance of SHELFICE_INIT_VARIA
@@ -32,10 +29,6 @@ CEndOfInterface
 C     === Local variables ===
 C     i,j,bi,bj - Loop counters
       INTEGER i, j, bi, bj
-#ifdef ALLOW_SHELFICE_GROUNDED_ICE
-      INTEGER ks
-#endif
-
 CEOP
 
       DO bj = myByLo(myThid), myByHi(myThid)
@@ -49,9 +42,6 @@ CEOP
           shiTransCoeffT        (i,j,bi,bj) = 0. _d 0
           shiTransCoeffS        (i,j,bi,bj) = 0. _d 0
           shelficeMass          (i,j,bi,bj) = 0. _d 0
-#ifdef ALLOW_SHELFICE_GROUNDED_ICE
-          R_MWCT                (i,j,bi,bj) = 0. _d 0
-#endif
          ENDDO
         ENDDO
        ENDDO
@@ -96,31 +86,10 @@ C     set coefficients to constant values
        ENDDO
       ENDDO
 
-      IF (shelficeMassStepping) THEN
-
-      IF ( .NOT. ( startTime .EQ. baseTime .AND.  nIter0 .EQ. 0
-     &     .AND. pickupSuff .EQ. ' ') ) THEN
-
-          CALL SHELFICE_READ_PICKUP ( myThid )
-
-#ifdef ALLOW_SHELFICE_REMESHING
-!       DNG -- if R_shelfice is read from a pickup then 
-!       ro_surf must be initialised to R_shelfice
-!       (an issue even without grounded ice)
-          IF ( usingZCoords ) THEN
-           DO bj=myByLo(myThid), myByHi(myThid)
-            DO bi=myBxLo(myThid), myBxHi(myThid)
-             DO j=1-OLy,sNy+OLy
-              DO i=1-OLx,sNx+OLx
-               ro_surf(i,j,bi,bj) =
-     &          R_shelfIce(i,j,bi,bj) 
-              ENDDO
-             ENDDO
-            ENDDO
-           ENDDO
-          ENDIF
-#endif
-
+      IF ( SHELFICEMassStepping .AND.
+     &     ( nIter0.NE.0 .OR. startTime.NE.baseTime
+     &                   .OR. pickupSuff.NE.' ') ) THEN
+        CALL SHELFICE_READ_PICKUP( 1, nIter0, myThid )
       ENDIF
 
 #ifdef ALLOW_COST
