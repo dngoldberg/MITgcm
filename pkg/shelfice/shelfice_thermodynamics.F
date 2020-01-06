@@ -466,7 +466,7 @@ c    &           )*recip_drLoc
              ENDIF
            ELSE
               u_topdr(i,j,bi,bj) = 0. _d 0
-			  uLoc(I,J) = u_topdr(i,j,bi,bj)
+              uLoc(I,J) = u_topdr(i,j,bi,bj)
            ENDIF
 #endif
 
@@ -497,11 +497,11 @@ c    &           )*recip_drLoc
      &            (cos( (1 - (depthColS(i,j,bi,bj)-cg2dminColumnEps)
      &                 /(shelficedepthminmelt-cg2dminColumnEps))*PI )
      &            + 0. _d 0)
-	           vLoc(I,J) = v_topdr(i,j,bi,bj)
+               vLoc(I,J) = v_topdr(i,j,bi,bj)
              ENDIF
            ELSE
               v_topdr(i,j,bi,bj) = 0. _d 0
-			  vLoc(I,J) = v_topdr(i,j,bi,bj)
+              vLoc(I,J) = v_topdr(i,j,bi,bj)
            ENDIF
 #endif		   
 
