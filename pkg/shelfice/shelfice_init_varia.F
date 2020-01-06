@@ -19,6 +19,9 @@ C     === Global variables ===
 #ifdef ALLOW_COST
 # include "SHELFICE_COST.h"
 #endif /* ALLOW_COST */
+#ifdef ALLOW_SHELFICE_GROUNDED_ICE
+# include "SURFACE.h"
+#endif
 
 C     === Routine arguments ===
 C     myThid -  Number of this instance of SHELFICE_INIT_VARIA
@@ -29,6 +32,10 @@ CEndOfInterface
 C     === Local variables ===
 C     i,j,bi,bj - Loop counters
       INTEGER i, j, bi, bj
+	  #ifdef ALLOW_SHELFICE_GROUNDED_ICE
+      INTEGER ks
+#endif
+
 CEOP
 
       DO bj = myByLo(myThid), myByHi(myThid)
