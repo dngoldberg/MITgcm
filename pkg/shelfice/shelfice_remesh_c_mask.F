@@ -390,7 +390,7 @@ c       CALL OBCS_UPDATE_REMESH( myThid )
               mergeFac1 = hFacS_old(i,j, k ,bi,bj)*drF( k )*r_newDz
               mergeFac2 = hFacS_old(i,j,k+1,bi,bj)*drF(k+1)*r_newDz
               vVel(i,j,k+1,bi,bj) = vVel(i,j, k ,bi,bj)*mergeFac1
-      &                           + vVel(i,j,k+1,bi,bj)*mergeFac2
+     &                            + vVel(i,j,k+1,bi,bj)*mergeFac2
              ELSE
               vVel(i,j,k+1,bi,bj) = 0.0
              ENDIF
