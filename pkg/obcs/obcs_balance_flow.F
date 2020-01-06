@@ -24,16 +24,14 @@ C     === Global variables ===
 #include "OBCS_PARAMS.h"
 #include "OBCS_GRID.h"
 #include "OBCS_FIELDS.h"
-<<<<<<< HEAD
 C KS16------------------------------------------
 # ifdef ALLOW_SHELFICE
 #  include "SHELFICE.h"
 #  include "SHELFICE_COST.h"
 # endif
-=======
 #include "FFIELDS.h"
 
->>>>>>> branch_remeshing
+
 
 C     !INPUT/OUTPUT PARAMETERS:
       _RL myTime
@@ -61,13 +59,14 @@ C     msgBuf       :: Informational/error message buffer
       _RL tileAreaOB(nSx,nSy)
       _RL tileInFlow(nSx,nSy)
       LOGICAL flag
-<<<<<<< HEAD
+	  _RL netFreshWaterFlux
+      _RL shelfIceNetMassFlux
 C     KS16-- add params -----------
       _RL SEALEVEL, ETA
-=======
-      _RL netFreshWaterFlux
-      _RL shelfIceNetMassFlux
->>>>>>> branch_remeshing
+
+      
+
+	  
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 C-- Old method (OBCS_balanceFac < 0): balance each OB separately

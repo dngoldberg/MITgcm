@@ -63,23 +63,16 @@ CEOP
      &     SHELFICEuseGammaFrict, SHELFICE_oldCalcUStar,
      &     shiCdrag, shiZetaN, shiRc,
      &     shiPrandtl, shiSchmidt, shiKinVisc,
-<<<<<<< HEAD
-     &     SHELFICERemeshFrequency, SHELFICESplitThreshold,
-     &     SHELFICEMergeThreshold, SHELFICErealfwflux,
      &     SHELFICE_massmin_truedens,
      &     SHELFICE_conserve_ssh,
      &     SHELFICEMassTimeDepFile,
      &     SHELFICEMassTendTimeDepFile,
      &     SHELFICE_forcing_period,
      &     SHELFICEdepthMinMelt
-=======
->>>>>>> branch_remeshing
 #ifdef ALLOW_COST
      &     mult_shelfice,
      &     mult_shifwflx, wshifwflx0, shifwflx_errfile,
 #endif
-     &     SHELFICEremeshFrequency,
-     &     SHELFICEsplitThreshold, SHELFICEmergeThreshold
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 
