@@ -50,7 +50,6 @@ C     === Global variables ===
 # include "SURFACE.h"
 #endif
 
-
 C     !INPUT/OUTPUT PARAMETERS:
 C     === Routine arguments ===
 C     myIter :: iteration counter for this thread
@@ -101,7 +100,7 @@ C     drKp1, recip_drLoc
       _RL eps1, eps2, eps3, eps3a, eps4, eps5, eps6, eps7, eps8
       _RL cFac, rFac, dFac, fwflxFac, rFWinBL
       _RL aqe, bqe, cqe, discrim, recip_aqe
-      _RL drKp1, recip_drLoc, drLoc
+      _RL drKp1, recip_drLoc
       _RL recip_latentHeat
       _RL tmpFac
 
@@ -122,10 +121,8 @@ C     drKp1, recip_drLoc
 #endif
 
 #ifdef ALLOW_SHIFWFLX_CONTROL
-      _RL xx_shifwflx_loc(1-olx:snx+olx,1-oly:sny+oly,nsx,nsy)
+      _RL xx_shifwflx_loc(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
 #endif
-
-
 #ifdef ALLOW_SHELFICE_GROUNDED_ICE
       _RL massMin  (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL effMass  (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
@@ -134,9 +131,6 @@ C     drKp1, recip_drLoc
 #endif
 CEOP
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
-
-       CALL SHELFICE_FIELDS_LOAD(
-     I      myTime, myIter, myThid )
 
 #ifdef SHI_ALLOW_GAMMAFRICT
 #ifdef ALLOW_AUTODIFF
@@ -256,6 +250,7 @@ C     where this value is part of the protocol
 #endif
 #endif /* ALLOW_SHIFWFLX_CONTROL */
 
+
 #ifdef ALLOW_SHELFICE_GROUNDED_ICE
 
       DO bj = myByLo(myThid), myByHi(myThid)
@@ -314,7 +309,7 @@ C     where this value is part of the protocol
         ENDDO
        ENDDO
       ENDDO
-  
+
 #endif
 
       DO bj = myByLo(myThid), myByHi(myThid)
@@ -458,15 +453,13 @@ c    &           )*recip_drLoc
 #ifdef ALLOW_PRESSURE_RELEASE_CODE
            IF (depthColW(i,j,bi,bj) .GT. cg2dminColumnEps) THEN
              IF (depthColW(i,j,bi,bj) .LT. 10.0) THEN
-               u_topdr(i,j,bi,bj) = u_topdr(i,j,bi,bj)*
+               uloc(i,j) = uloc(i,j)*
      &            (cos( (1 - (depthColW(i,j,bi,bj)-cg2dminColumnEps)
      &                 /(shelficedepthminmelt-cg2dminColumnEps))*PI )
      &            + 0. _d 0)
-               uLoc(I,J) = u_topdr(i,j,bi,bj)
              ENDIF
            ELSE
-              u_topdr(i,j,bi,bj) = 0. _d 0
-              uLoc(I,J) = u_topdr(i,j,bi,bj)
+              uLoc(I,J) = 0. _d 0
            ENDIF
 #endif
 
@@ -493,15 +486,13 @@ c    &           )*recip_drLoc
 #ifdef ALLOW_PRESSURE_RELEASE_CODE
            IF (depthColS(i,j,bi,bj) .GT. cg2dminColumnEps) THEN
              IF (depthColS(i,j,bi,bj) .LT. 10.0) THEN
-               v_topdr(i,j,bi,bj) = v_topdr(i,j,bi,bj)*
+               vloc(i,j) = vloc(i,j)*
      &            (cos( (1 - (depthColS(i,j,bi,bj)-cg2dminColumnEps)
      &                 /(shelficedepthminmelt-cg2dminColumnEps))*PI )
      &            + 0. _d 0)
-               vLoc(I,J) = v_topdr(i,j,bi,bj)
              ENDIF
            ELSE
-              v_topdr(i,j,bi,bj) = 0. _d 0
-              vLoc(I,J) = v_topdr(i,j,bi,bj)
+              vLoc(I,J) = 0. _d 0
            ENDIF
 #endif		   
 
@@ -718,7 +709,7 @@ cph     &           * ( saltFreeze - sLoc(I,J) ) / saltFreeze
 #endif /*  ALLOW_SHIFWFLX_CONTROL */
 
 #ifdef ALLOW_SHELFICE_GROUNDED_ICE
-           freshWaterFlux = 
+           freshWaterFlux =
      &       freshWaterFlux*(GrdFactor(i,j,bi,bj)*0.5+0.5)
 #endif
 
@@ -840,7 +831,6 @@ C     Friction velocity
        CALL DIAGNOSTICS_FILL(depthColS,'DEPTH_DY',
      &      0,1,0,1,1,myThid)
 #endif
-
       ENDIF
 #endif /* ALLOW_DIAGNOSTICS */
 

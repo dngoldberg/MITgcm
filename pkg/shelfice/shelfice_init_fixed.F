@@ -331,6 +331,7 @@ c     ENDIF
      I      diagName, diagCode, diagUnits, diagTitle, 0, myThid )
 
 #endif
+#endif
       ENDIF
 #endif /* ALLOW_DIAGNOSTICS */
 #endif /* ALLOW_SHELFICE */

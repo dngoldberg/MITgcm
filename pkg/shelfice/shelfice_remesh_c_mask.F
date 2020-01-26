@@ -54,7 +54,7 @@ C     msgBuf  :: Informational/error message buffer
       CHARACTER*(MAX_LEN_MBUF) msgBuf
 #endif
       _RL sync_fac, stag_fac
-      _RL adjust, eta_old, r_newDz
+      _RL adjust, eta_old, r_newDz, newvol
       _RL tmpVar, mergeFac1,  mergeFac2
       _RS hFacS_old(1-OLx:sNx+OLx,1-OLy:sNy+OLy,1:Nr,nSx,nSy)
       _RS hFacW_old(1-OLx:sNx+OLx,1-OLy:sNy+OLy,1:Nr,nSx,nSy)
@@ -358,10 +358,12 @@ c       CALL OBCS_UPDATE_REMESH( myThid )
         DO k=1,Nr
          DO j=1,sNy
           DO i=1,sNx
+!             newvol = hFacS(i,j,k+1,bi,bj) * drF(k+1)
 
             IF ( maskW(i,j,k,bi,bj).EQ.zeroRS .AND.
      &           hFacW_old(i,j,k,bi,bj).NE.zeroRS ) THEN
-             IF (hFacW(i,j,k+1,bi,bj)*drF(k+1).gt.zeroRS) THEN
+             newvol = hFacW(i,j,k+1,bi,bj)*drF(k+1)
+             IF (newvol.gt.zeroRS) THEN
               r_newDz = recip_drF(k+1)/hFacW(i,j,k+1,bi,bj)
               mergeFac1 = hFacW_old(i,j, k ,bi,bj)*drF( k )*r_newDz
               mergeFac2 = hFacW_old(i,j,k+1,bi,bj)*drF(k+1)*r_newDz
@@ -373,7 +375,7 @@ c       CALL OBCS_UPDATE_REMESH( myThid )
              uVel(i,j,k,bi,bj) = 0.0
 #ifdef ALLOW_ADAMSBASHFORTH_3
 #else
-             IF (hFacW(i,j,k+1,bi,bj)*drF(k+1).gt.zeroRS) THEN
+             IF (newvol.gt.zeroRS) THEN
               guNm1(i,j,k+1,bi,bj) = guNm1(i,j, k ,bi,bj)*mergeFac1
      &                             + guNm1(i,j,k+1,bi,bj)*mergeFac2
              ELSE
@@ -385,7 +387,8 @@ c       CALL OBCS_UPDATE_REMESH( myThid )
 
             IF ( maskS(i,j,k,bi,bj).EQ.zeroRS .AND.
      &           hFacS_old(i,j,k,bi,bj).NE.zeroRS ) THEN
-             IF (hFacS(i,j,k+1,bi,bj)*drF(k+1).gt.zeroRS) THEN
+             newvol = hFacS(i,j,k+1,bi,bj)*drF(k+1)
+             IF (newvol.gt.zeroRS) THEN
               r_newDz = recip_drF(k+1)/hFacS(i,j,k+1,bi,bj)
               mergeFac1 = hFacS_old(i,j, k ,bi,bj)*drF( k )*r_newDz
               mergeFac2 = hFacS_old(i,j,k+1,bi,bj)*drF(k+1)*r_newDz
@@ -397,7 +400,7 @@ c       CALL OBCS_UPDATE_REMESH( myThid )
              vVel(i,j,k,bi,bj) = 0.0
 #ifdef ALLOW_ADAMSBASHFORTH_3
 #else
-             IF (hFacS(i,j,k+1,bi,bj)*drF(k+1).gt.zeroRS) THEN
+             IF (newvol.gt.zeroRS) THEN
               gvNm1(i,j,k+1,bi,bj) = gvNm1(i,j, k ,bi,bj)*mergeFac1
      &                             + gvNm1(i,j,k+1,bi,bj)*mergeFac2
              ELSE
