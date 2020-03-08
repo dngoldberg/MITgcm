@@ -170,11 +170,15 @@ c         ice thickness does not take up whole ocean column -> floating
 # else
            hf = -1.0 * i_r * R_low (i,j,bi,bj) 
 # endif
-           
+      
            float_frac_streamice(i,j,bi,bj) = 
      &      PHI_GL_STREAMICE (
      &       h-hf+streamice_smooth_gl_width/2., 
      &       streamice_smooth_gl_width)
+!           if (float_frac_streamice(i,j,bi,bj) .gt. 0 .and.
+!     &         float_frac_streamice(i,j,bi,bj) .lt. 1) then
+!             print *, "GOT HERE", h,hf
+!           endif
 
           endif
 #endif
