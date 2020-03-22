@@ -227,8 +227,7 @@ CADJ &     = comlev1_stream_hybrid, key=ikey_1
      &      STREAMICE_BSTRESS_EXP (unorm,n_basal_friction) *
      &      streamice_basal_geom(i,j,bi,bj) *
      &      float_frac_streamice(i,j,bi,bj) *
-     &      dummyA_streamice(i,j,bi,bj) + 
-     &      0.00001 * (1-float_frac_streamice(i,j,bi,bj))
+     &      dummyA_streamice(i,j,bi,bj) 
 
            tau_beta_eff_streamice(i,j,bi,bj) =
      &       fb /
