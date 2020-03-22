@@ -51,10 +51,13 @@ C     === Global variables ===
       _RL hflux_y_SI(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
 
       CHARACTER*(MAX_LEN_MBUF) msgBuf
+      CHARACTER*(19) maskFile
+      INTEGER numTSperyear, fileyear
 
       CALL TIMER_START ('STREAMICE_ADVECT_THICKNESS',myThid)
 
       sec_per_year = 365.*86400.
+      numTSperyear = NINT(sec_per_year/time_step)
 
       time_step_loc = time_step / sec_per_year
       time_step_full = time_step_loc
@@ -306,9 +309,51 @@ CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
 ! NOTE: AT THIS POINT H IS NOT VALID ON OVERLAP!!!
 
       if (streamice_move_front) then
-      CALL STREAMICE_ADV_FRONT (
+       CALL STREAMICE_ADV_FRONT (
      &  myThid, time_step_loc,
      &  hflux_x_SI, hflux_y_SI )
+       write(msgbuf,'(a,i9.8)')
+     &  "GOT HERE, TIMESTEP ", myIter
+       call print_message( msgbuf, standardmessageunit,
+     &                     SQUEEZE_RIGHT , mythid)
+
+       if (mod(myIter,numTSperyear).eq.0.0) THEN
+        if (NINT(real(myiter)/numTSperyear).le.16 .and. 
+     &      NINT(real(myiter)/numTSperyear).ge.1) THEN
+
+         fileyear = NINT (REAL(myIter)/numTSperyear+1995)
+
+         WRITE(maskFile,'(a,I4,a)') 'mask_front_',fileyear,'.bin'
+        
+         CALL READ_FLD_XY_RL( maskFile, '',
+     &      streamice_calve_mask, 0, myThid )
+         _EXCH_XY_RL(streamice_calve_mask,myThid)
+
+         DO bj=myByLo(myThid),myByHi(myThid)
+          DO bi=myBxLo(myThid),myBxHi(myThid)
+           DO j=1,sNy
+            DO i=1,sNx
+             if (streamice_calve_mask(i,j,bi,bj).eq.0.0.and.
+     &           (streamice_hmask(i,j,bi,bj).eq.1 .or.
+     &            streamice_hmask(i,j,bi,bj).eq.2)) then
+              STREAMICE_hmask (i,j,bi,bj) = 0.0
+              area_shelf_streamice (i,j,bi,bj) = 0.0
+              H_streamice(i,j,bi,bj) = 0.0
+             endif
+            ENDDO
+           ENDDO
+          ENDDO
+         ENDDO
+         _EXCH_XY_RL(H_streamice,myThid)
+         _EXCH_XY_RL(streamice_hmask,myThid)
+         _EXCH_XY_RL(area_shelf_streamice,myThid)
+         write(msgbuf,'(a,a)')
+     &    "GOT HERE, UPLOADED MASK ", maskFile
+         call print_message( msgbuf, standardmessageunit,
+     &                     SQUEEZE_RIGHT , mythid)
+
+        endif
+       endif
       endif
 
 #ifdef ALLOW_STREAMICE_2DTRACER
@@ -350,9 +395,31 @@ CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
             STOP 'SHELFICE IS NOT ENABLED'
 #endif
            ELSE
-              MR = (1.-float_frac_streamice(i,j,bi,bj)) *
-     &             (BDOT_STREAMICE(i,j,bi,bj) +
-     &              BDOT_pert(i,j,bi,bj))
+
+               
+
+!              MR = (1.-float_frac_streamice(i,j,bi,bj)) *
+!     &             (BDOT_STREAMICE(i,j,bi,bj) +
+!     &              BDOT_pert(i,j,bi,bj))
+
+               IF (base_el_streamice(i,j,bi,bj) .lt. 0.0) THEN
+                IF (base_el_streamice(i,j,bi,bj) .lt. -500.) THEN
+                 MR = 50;
+                ELSE
+                 MR = -0.1 * base_el_streamice(i,j,bi,bj);
+                ENDIF
+               ENDIF
+
+               IF (base_el_streamice(i,j,bi,bj) .gt.
+     &           R_low_si(i,j,bi,bj)) THEN
+                  IF (float_frac_streamice(i,j,bi,bj).gt.0.0) THEN
+                   MR = 0.0
+                  ENDIF
+               ELSE
+                  MR = 0.0
+               ENDIF
+               BDOT_streamice(i,j,bi,bj) = MR
+               
            ENDIF
 
            SMB = ADOT_STREAMICE(i,j,bi,bj)
@@ -374,7 +441,23 @@ CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
        ENDDO
       ENDDO
 
+
+      DO bj=myByLo(myThid),myByHi(myThid)
+       DO bi=myBxLo(myThid),myBxHi(myThid)
+        DO j=1,sNy
+         DO i=1,sNx
+          if (streamice_cost_mask(i,j,bi,bj).eq.0.0 .AND.
+     &        STREAMICE_hmask(i,j,bi,bj).eq.1.0 .and.
+     &        dummyB_streamice(i,j,bi,bj).gt.0.0) then
+            H_streamice(i,j,bi,bj) = dummyB_streamice(i,j,bi,bj)
+          endif
+         ENDDO
+        ENDDO
+       ENDDO
+      ENDDO
+
       _EXCH_XY_RL(H_streamice,myThid)
+      _EXCH_XY_RL(bdot_streamice,myThid)
 
       WRITE(msgBuf,'(A)') 'END STREAMICE_ADVECT_THICKNESS'
        CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,

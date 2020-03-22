@@ -167,6 +167,18 @@ C-    Wait for everyone to set loadNewData before Master updates prevMnthIndex
      &                        bdot_streamice1, 
      &                        nm0,myIter,myThid)
          ENDIF
+         IF ( STREAMICEdummyATimeDepFile .NE. ' '  ) THEN
+!         PRINT *, "GOT HERE FIELDS LOAD 3",  STREAMICEBdotTimeDepFile
+          CALL READ_REC_XY_RL(STREAMICEdummyATimeDepFile,
+     &                        dummyA_streamice1, 
+     &                        nm0,myIter,myThid)
+         ENDIF
+         IF ( STREAMICEdummyBTimeDepFile .NE. ' '  ) THEN
+!         PRINT *, "GOT HERE FIELDS LOAD 3",  STREAMICEBdotTimeDepFile
+          CALL READ_REC_XY_RL(STREAMICEdummyBTimeDepFile,
+     &                        dummyB_streamice1, 
+     &                        nm0,myIter,myThid)
+         ENDIF
 
 C-      endif 1rst iter.
         ENDIF
@@ -259,6 +271,10 @@ C-      endif 1rst iter.
             DO i=1,sNx
              bdot_streamice0(i,j,bi,bj) = 
      &        bdot_streamice1(i,j,bi,bj)
+             dummyA_streamice0(i,j,bi,bj) = 
+     &        dummyA_streamice1(i,j,bi,bj)
+             dummyB_streamice0(i,j,bi,bj) = 
+     &        dummyB_streamice1(i,j,bi,bj)
             ENDDO
            ENDDO
           ENDDO
@@ -267,6 +283,16 @@ C-      endif 1rst iter.
          IF ( STREAMICEBdotTimeDepFile .NE. ' '  ) THEN
           CALL READ_REC_XY_RL(STREAMICEBdotTimeDepFile,
      &                        bdot_streamice1, 
+     &                        nm1,myIter,myThid)
+         ENDIF
+         IF ( STREAMICEdummyATimeDepFile .NE. ' '  ) THEN
+          CALL READ_REC_XY_RL(STREAMICEdummyATimeDepFile,
+     &                        dummyA_streamice1, 
+     &                        nm1,myIter,myThid)
+         ENDIF
+         IF ( STREAMICEdummyBTimeDepFile .NE. ' '  ) THEN
+          CALL READ_REC_XY_RL(STREAMICEdummyBTimeDepFile,
+     &                        dummyB_streamice1, 
      &                        nm1,myIter,myThid)
          ENDIF
 
@@ -303,11 +329,18 @@ C-      endif 1rst iter.
              bdot_streamice (i,j,bi,bj) = 
      &        fac    * bdot_streamice0(i,j,bi,bj)
      &     + (1-fac) * bdot_streamice1(i,j,bi,bj)
+             dummyA_streamice (i,j,bi,bj) = 
+     &        fac    * dummyA_streamice0(i,j,bi,bj)
+     &     + (1-fac) * dummyA_streamice1(i,j,bi,bj)
+             dummyB_streamice (i,j,bi,bj) = 
+     &        fac    * dummyB_streamice0(i,j,bi,bj)
+     &     + (1-fac) * dummyB_streamice1(i,j,bi,bj)
            ENDDO
           ENDDO
          ENDDO
         ENDDO
 
+#ifdef STREAMICE_STRESS_BOUNDARY_CONTROL
       CALL EXCH_XY_RL 
      & (streamice_v_shear_stress, myThid)
       CALL EXCH_XY_RL 
@@ -316,8 +349,11 @@ C-      endif 1rst iter.
      & (streamice_v_normal_stress, myThid)
       CALL EXCH_XY_RL 
      & (streamice_u_normal_stress, myThid)
+#endif
 
        _EXCH_XY_RL(bdot_streamice, mythid )
+       _EXCH_XY_RL(dummyA_streamice, mythid )
+       _EXCH_XY_RL(dummyB_streamice, mythid )
 #ifdef ALLOW_STREAMICE_FLUX_CONTROL
       CALL EXCH_XY_RL
      & (u_flux_bdry_pert, myThid)
