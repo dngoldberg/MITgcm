@@ -316,7 +316,9 @@ CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
      &  "GOT HERE, TIMESTEP ", myIter
        call print_message( msgbuf, standardmessageunit,
      &                     SQUEEZE_RIGHT , mythid)
+      endif
 
+      if (streamice_front_retreat) then
        if (mod(myIter,numTSperyear).eq.0.0) THEN
         if (NINT(real(myiter)/numTSperyear).le.16 .and. 
      &      NINT(real(myiter)/numTSperyear).ge.1) THEN
@@ -441,7 +443,7 @@ CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
        ENDDO
       ENDDO
 
-
+      IF (streamice_shelf_thin) then
       DO bj=myByLo(myThid),myByHi(myThid)
        DO bi=myBxLo(myThid),myBxHi(myThid)
         DO j=1,sNy
@@ -455,6 +457,7 @@ CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
         ENDDO
        ENDDO
       ENDDO
+      ENDIF
 
       _EXCH_XY_RL(H_streamice,myThid)
       _EXCH_XY_RL(bdot_streamice,myThid)

@@ -266,6 +266,9 @@ C     -------------------------- LOGICAL PARAMS --------------------------------
       LOGICAL STREAMICE_apply_firn_correction
       LOGICAL STREAMICE_alt_driving_stress
       LOGICAL STREAMICE_allow_reg_coulomb
+      LOGICAL STREAMICE_do_shelf_thin
+      LOGICAL STREAMICE_do_front_retreat
+      LOGICAL STREAMICE_do_grline_weak
 #if (defined (ALLOW_OPENAD) && defined (ALLOW_STREAMICE_OAD_FP) )
 #ifdef ALLOW_PETSC
       LOGICAL STREAMICE_need2createmat
@@ -304,6 +307,9 @@ C      LOGICAL STREAMICE_hybrid_stress
      & STREAMICE_allow_cpl, streamice_use_petsc,
      & STREAMICE_alt_driving_stress,
      & STREAMICE_allow_reg_coulomb,
+     & STREAMICE_do_shelf_thin,
+     & STREAMICE_do_front_retreat,
+     & STREAMICE_do_grline_weak,
 #ifdef STREAMICE_FLOWLINE_BUTTRESS
      & useStreamiceFlowlineButtr,
 #endif

@@ -100,6 +100,9 @@ C     iUnit      :: Work variable for IO unit number
      &     STREAMICE_chkresidconvergence,
      &     STREAMICE_alt_driving_stress,
      &     STREAMICE_allow_reg_coulomb,
+     &     STREAMICE_do_shelf_thin,
+     &     STREAMICE_do_front_retreat,
+     &     STREAMICE_do_grline_weak,
 #ifdef STREAMICE_FLOWLINE_BUTTRESS
      &     streamice_buttr_width,
      &     useStreamiceFlowlineButtr,
@@ -307,6 +310,9 @@ C--   Default values for STREAMICE
 !      ENDDO
 !#endif
 
+      STREAMICE_do_shelf_thin = .FALSE.
+      STREAMICE_do_front_retreat = .FALSE.
+      STREAMICE_do_grline_weak = .FALSE.
       STREAMICE_tave_mdsio = .TRUE.
       STREAMICE_dump_mdsio = .TRUE.
       STREAMICE_dump_mnc = .FALSE.
