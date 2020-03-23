@@ -223,7 +223,7 @@ CADJ &     = comlev1_stream_hybrid, key=ikey_1
 
            unorm = sqrt(ub**2+vb**2+eps_u_min**2)
 
-           if (streamice_grline_weak) then
+           if (streamice_do_grline_weak) then
            fb = C_basal_friction(i,j,bi,bj)**2 *
      &      STREAMICE_BSTRESS_EXP (unorm,n_basal_friction) *
      &      streamice_basal_geom(i,j,bi,bj) *
@@ -239,6 +239,8 @@ CADJ &     = comlev1_stream_hybrid, key=ikey_1
            tau_beta_eff_streamice(i,j,bi,bj) =
      &       fb /
      &       (1+fb*streamice_omega(i,j,bi,bj)/H_streamice(i,j,bi,bj))
+     &       + floating_ice_drag * (1-float_frac_streamice(i,j,bi,bj))
+     
 #ifdef STREAMICE_FLOWLINE_BUTTRESS
            if (usestreamiceflowlineButtr) then
            tau_beta_eff_streamice(i,j,bi,bj) = 

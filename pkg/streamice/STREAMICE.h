@@ -27,7 +27,7 @@ C     & A_glen_isothermal, n_glen, eps_glen_min, eps_u_min,
      & streamice_buttr_width,
 #endif
      & streamice_firn_correction, streamice_density_firn,
-     & streamice_forcing_period
+     & streamice_forcing_period, floating_ice_drag
 
       _RL streamice_density, streamice_density_ocean_avg
 C      _RL A_glen_isothermal, n_glen, eps_glen_min, eps_u_min
@@ -39,6 +39,7 @@ C      _RL A_glen_isothermal, n_glen, eps_glen_min, eps_u_min
       _RL streamice_cg_tol, streamice_nonlin_tol
       _RL streamice_nonlin_tol_fp
       _RL streamice_err_norm      
+      _RL floating_ice_drag
 
 C  |  streamice_err_norm: the p-norm to find the error of the residual
 C  |  or difference in the nonlin iteration
@@ -98,7 +99,7 @@ C     -------------------------- INT PARAMS ------------------------------------
      &     streamice_vel_upd_counter, streamice_nstep_velocity,
      &     streamice_maxcgiter_cpl, streamice_maxnliter_cpl,
      &     streamice_maxnliter_Petsc, petscFlag,
-     &     streamice_petsc_pcfactorlevel
+     &     streamice_petsc_pcfactorlevels
 #ifdef ALLOW_OPENAD
      &     ,streamice_smooth_thick_adjoint
 #endif
@@ -108,7 +109,7 @@ C     -------------------------- INT PARAMS ------------------------------------
       INTEGER streamice_vel_upd_counter, streamice_nstep_velocity
       INTEGER streamice_maxcgiter_cpl, streamice_maxnliter_cpl
       INTEGER streamice_maxnliter_Petsc, petscFlag
-      INTEGER streamice_petsc_pcfactorlevel
+      INTEGER streamice_petsc_pcfactorlevels
 #ifdef ALLOW_OPENAD
       INTEGER streamice_smooth_thick_adjoint
 #endif

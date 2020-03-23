@@ -318,7 +318,7 @@ CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
      &                     SQUEEZE_RIGHT , mythid)
       endif
 
-      if (streamice_front_retreat) then
+      if (streamice_do_front_retreat) then
        if (mod(myIter,numTSperyear).eq.0.0) THEN
         if (NINT(real(myiter)/numTSperyear).le.16 .and. 
      &      NINT(real(myiter)/numTSperyear).ge.1) THEN
@@ -443,7 +443,7 @@ CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
        ENDDO
       ENDDO
 
-      IF (streamice_shelf_thin) then
+      IF (streamice_do_shelf_thin) then
       DO bj=myByLo(myThid),myByHi(myThid)
        DO bi=myBxLo(myThid),myBxHi(myThid)
         DO j=1,sNy

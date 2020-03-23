@@ -103,6 +103,7 @@ C     iUnit      :: Work variable for IO unit number
      &     STREAMICE_do_shelf_thin,
      &     STREAMICE_do_front_retreat,
      &     STREAMICE_do_grline_weak,
+     &     floating_ice_drag,
 #ifdef STREAMICE_FLOWLINE_BUTTRESS
      &     streamice_buttr_width,
      &     useStreamiceFlowlineButtr,
@@ -123,7 +124,7 @@ C     iUnit      :: Work variable for IO unit number
       NAMELIST /STREAMICE_PARMPETSC/
      &     PETSC_PRECOND_TYPE, PETSC_SOLVER_TYPE, 
      &     streamice_use_petsc, streamice_maxnliter_petsc,
-     &     streamice_petsc_pcfactorlevel
+     &     streamice_petsc_pcfactorlevels
 #endif
 
 #if (defined (ALLOW_OPENAD) && defined (ALLOW_STREAMICE_OAD_FP))
@@ -220,7 +221,7 @@ C--   Default values for STREAMICE
       streamice_max_cg_iter = 2000
       streamice_max_nl_iter = 100
       streamice_maxnliter_petsc = -1
-      streamice_petsc_pcfactorlevel=0
+      streamice_petsc_pcfactorlevels=0
       streamice_maxcgiter_cpl = 0
       streamice_maxnliter_cpl = 0
 #ifdef ALLOW_OPENAD
@@ -228,6 +229,7 @@ C--   Default values for STREAMICE
 #endif
 !      streamice_n_sub_regularize = 4
       streamice_CFL_factor = .5
+      floating_ice_drag = 0.
       streamice_adjDump = 0.
       streamice_bg_surf_slope_x = .0
       streamice_bg_surf_slope_y = 0.
