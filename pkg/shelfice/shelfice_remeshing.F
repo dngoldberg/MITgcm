@@ -88,7 +88,6 @@ CEOP
      I                 uVel, vVel,
      O                 wVel,
      I                 myIter, myThid )
->>>>>>> master
        ENDIF
       ENDIF
 #endif /* ALLOW_SHELFICE_REMESHING */

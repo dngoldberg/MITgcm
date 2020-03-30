@@ -146,19 +146,19 @@ C     update cell-centered grid factors and mask: maskC, h0FacC, recip_hFacC
           ENDIF
 
 C-- MERGE CELLS
-<<<<<<< HEAD
-          IF ( kTopC(i,j,bi,bj).LT.kLowC (i,j,bi,bj) ) THEN
-           k = MAX(1,kTopC(i,j,bi,bj))
-           IF ( hFac_surfC(i,j,bi,bj) .LT.
-     &          SHELFICEmergeThreshold ) THEN
-            IF ( (hFac_surfC(i,j,bi,bj)*drF(k)*recip_drF(k+1)+1) .LT.
-     &          SHELFICEsplitThreshold ) THEN
-
-!             print *, "GOT HERE MERGE", i,j,k,myiter
-
-             adjust = R_shelfice(i,j,bi,bj)-rF(k+1)
-             eta_old = etaH(i,j,bi,bj)
-=======
+!<<<<<<< HEAD
+!          IF ( kTopC(i,j,bi,bj).LT.kLowC (i,j,bi,bj) ) THEN
+!           k = MAX(1,kTopC(i,j,bi,bj))
+!           IF ( hFac_surfC(i,j,bi,bj) .LT.
+!     &          SHELFICEmergeThreshold ) THEN
+!            IF ( (hFac_surfC(i,j,bi,bj)*drF(k)*recip_drF(k+1)+1) .LT.
+!     &          SHELFICEsplitThreshold ) THEN
+!
+!!             print *, "GOT HERE MERGE", i,j,k,myiter
+!
+!             adjust = R_shelfice(i,j,bi,bj)-rF(k+1)
+!             eta_old = etaH(i,j,bi,bj)
+!=======
           IF ( ks.NE.0 .AND. ks.LT.kLowC (i,j,bi,bj) ) THEN
            IF ( hFac_surfC(i,j,bi,bj).LT.SHELFICEmergeThreshold ) THEN
             IF ( (hFac_surfC(i,j,bi,bj)*drF(ks)*recip_drF(ks+1)+1)
@@ -168,7 +168,7 @@ C-- MERGE CELLS
              k2 = ks+1
              kSurfC(i,j,bi,bj) = k2
              adjust = R_shelfIce(i,j,bi,bj)-rF(k2)
->>>>>>> master
+!>>>>>>> master
 #ifdef SHELFICE_REMESH_PRINT
              prtPoint = ( ioUnit.GE.0 ) .AND.
      &          ( i.GE.1 .AND. i.LE.sNx .AND. j.GE.1 .AND. j.LE.sNy )
@@ -254,245 +254,8 @@ C---
         WRITE(msgBuf,'(A,A)') 'SHI_REMESH :', ' end of report'
         CALL PRINT_MESSAGE( msgBuf,ioUnit,SQUEEZE_RIGHT,myThid )
       ENDIF
-<<<<<<< HEAD
-#endif
-
-      CALL EXCH_XYZ_RS( h0FacC, myThid )
-
-      DO k=1,Nr
-       DO bj = myByLo(myThid), myByHi(myThid)
-        DO bi = myBxLo(myThid), myBxHi(myThid)
-         DO j = 1-OLy,sNy+OLy
-          DO i = 1-OLx,sNx+OLx
-           hFacC(i,j,k,bi,bj) = h0FacC(i,j,k,bi,bj)
-          ENDDO
-         ENDDO
-        ENDDO
-       ENDDO
-      ENDDO
-
-      DO bj = myByLo(myThid), myByHi(myThid)
-       DO bi = myBxLo(myThid), myBxHi(myThid)
-C-    Calculate quantities derived from XY depth map
-        DO j=1,sNy
-         DO i=1,sNx
-C         Total fluid column thickness (r_unit) :
-           tmpVar = Ro_surf(i,j,bi,bj) - R_low(i,j,bi,bj)
-C          Inverse of fluid column thickness (1/r_unit)
-           IF ( tmpVar .LE. zeroRL ) THEN
-            recip_Rcol(i,j,bi,bj) = 0.
-           ELSE
-            recip_Rcol(i,j,bi,bj) = 1. _d 0 / tmpVar
-           ENDIF
-         ENDDO
-        ENDDO
-       ENDDO
-      ENDDO
-
-C- fill in the overlap (+ BARRIER):
-      CALL EXCH_XYZ_RL( theta, myThid )
-      CALL EXCH_XYZ_RL( salt,  myThid )
-      CALL EXCH_XYZ_RS( maskC, myThid )
-      CALL EXCH_XY_RL( EtaHnm1, myThid )
-      CALL EXCH_XY_RL( EtaN, myThid )
-      CALL EXCH_XY_RL( EtaH, myThid )
-      CALL EXCH_XY_RS( Ro_Surf, myThid )
-      CALL EXCH_XY_RS( R_shelfIce, myThid )
-      CALL EXCH_XY_RS( recip_Rcol, myThid )
-
-      DO bj = myByLo(myThid), myByHi(myThid)
-       DO bi = myBxLo(myThid), myBxHi(myThid)
-        DO j=1,sNy
-         DO i=1,sNx
-           rSurfW(i,j,bi,bj) =
-     &           MIN( Ro_surf(i-1,j,bi,bj), Ro_surf(i,j,bi,bj) )
-           rSurfW(i,j,bi,bj) =
-     &           MAX( rSurfW(i,j,bi,bj), rLowW(i,j,bi,bj) )
-         ENDDO
-        ENDDO
-        DO j=1,sNy
-         DO i=1,sNx
-           rSurfS(i,j,bi,bj) =
-     &           MIN( Ro_surf(i,j-1,bi,bj), Ro_surf(i,j,bi,bj) )
-           rSurfS(i,j,bi,bj) =
-     &           MAX( rSurfS(i,j,bi,bj), rLowS(i,j,bi,bj) )
-         ENDDO
-        ENDDO
-       ENDDO
-      ENDDO
-
-      DO bj = myByLo(myThid), myByHi(myThid)
-       DO bi = myBxLo(myThid), myBxHi(myThid)
-        DO j=1-OLy,sNy+OLy
-         DO i=1-OLx,sNx+OLx
-          kSurfC(i,j,bi,bj) = Nr+1
-         ENDDO
-        ENDDO
-        DO k=Nr,1,-1
-         DO j=1-OLy,sNy+OLy
-          DO i=1-OLx,sNx+OLx
-           IF ( hFacC(i,j,k,bi,bj).NE.zeroRS ) kSurfC(i,j,bi,bj) = k
-          ENDDO
-         ENDDO
-        ENDDO
-        DO j=1-OLy,sNy+OLy
-         DO i=1-OLx,sNx+OLx
-
-          maskInC(i,j,bi,bj) = 0.
-          IF ( kSurfC(i,j,bi,bj).LE.Nr ) maskInC(i,j,bi,bj) = 1.
-
-! DNG do not need to update these for vertical remeshing
-! DNG but will need to update for horizontal remeshing
-         ENDDO
-        ENDDO
-       ENDDO
-      ENDDO
-
-      DO bj = myByLo(myThid), myByHi(myThid)
-       DO bi = myBxLo(myThid), myBxHi(myThid)
-        DO j = 1-OLy, sNy+OLy
-         DO i = 1-OLx, sNx+OLx
-          IF ( kSurfC(i,j,bi,bj).LE.Nr .AND.
-     &         R_shelfIce(i,j,bi,bj).LT.zeroRS ) THEN
-            kTopC(i,j,bi,bj) = kSurfC(i,j,bi,bj)
-          ELSE
-            kTopC(i,j,bi,bj) = 0
-          ENDIF
-         ENDDO
-        ENDDO
-       ENDDO
-      ENDDO
-
-      DO bj = myByLo(myThid), myByHi(myThid)
-       DO bi = myBxLo(myThid), myBxHi(myThid)
-        DO k=1,Nr
-         DO j=1-OLy,sNy+OLy
-          DO i=1-OLx,sNx+OLx
-           hFacW_old(i,j,k,bi,bj) = hFacW(i,j,k,bi,bj)
-           hFacS_old(i,j,k,bi,bj) = hFacS(i,j,k,bi,bj)
-          ENDDO
-         ENDDO
-        ENDDO
-       ENDDO
-      ENDDO
-
-      CALL SHELFICE_REMESH_UVMASKS (myThid)
-#ifdef ALLOW_OBCS
-      IF (useobcs) THEN
-C- DNG call will be needed for horizontal remeshing
-c       CALL OBCS_UPDATE_REMESH( myThid )
-      ENDIF
-#endif
-      CALL CALC_SURF_DR( etaHnm1, myTime, myIter, myThid )
-      CALL UPDATE_SURF_DR(.TRUE., myTime, myIter, myThid)
-      CALL CALC_SURF_DR( etaH, myTime, myIter, myThid )
-
-      DO bj = myByLo(myThid), myByHi(myThid)
-       DO bi = myBxLo(myThid), myBxHi(myThid)
-
-        DO k=1,Nr
-         DO j=1,sNy
-          DO i=1,sNx
-!             newvol = hFacS(i,j,k+1,bi,bj) * drF(k+1)
-
-            IF ( maskW(i,j,k,bi,bj).EQ.zeroRS .AND.
-     &           hFacW_old(i,j,k,bi,bj).NE.zeroRS ) THEN
-             newvol = hFacW(i,j,k+1,bi,bj)*drF(k+1)
-             IF (newvol.gt.zeroRS) THEN
-              r_newDz = recip_drF(k+1)/hFacW(i,j,k+1,bi,bj)
-              mergeFac1 = hFacW_old(i,j, k ,bi,bj)*drF( k )*r_newDz
-              mergeFac2 = hFacW_old(i,j,k+1,bi,bj)*drF(k+1)*r_newDz
-              uVel(i,j,k+1,bi,bj) = uVel(i,j, k ,bi,bj)*mergeFac1
-     &                            + uVel(i,j,k+1,bi,bj)*mergeFac2
-             ELSE
-              uVel(i,j,k+1,bi,bj) = 0.0
-             ENDIF
-             uVel(i,j,k,bi,bj) = 0.0
-#ifdef ALLOW_ADAMSBASHFORTH_3
-#else
-             IF (newvol.gt.zeroRS) THEN
-              guNm1(i,j,k+1,bi,bj) = guNm1(i,j, k ,bi,bj)*mergeFac1
-     &                             + guNm1(i,j,k+1,bi,bj)*mergeFac2
-             ELSE
-              guNm1(i,j,k+1,bi,bj) = 0.0
-             ENDIF
-             guNm1(i,j,k,bi,bj) = 0.0
-#endif
-            ENDIF
-
-            IF ( maskS(i,j,k,bi,bj).EQ.zeroRS .AND.
-     &           hFacS_old(i,j,k,bi,bj).NE.zeroRS ) THEN
-             newvol = hFacS(i,j,k+1,bi,bj)*drF(k+1)
-             IF (newvol.gt.zeroRS) THEN
-              r_newDz = recip_drF(k+1)/hFacS(i,j,k+1,bi,bj)
-              mergeFac1 = hFacS_old(i,j, k ,bi,bj)*drF( k )*r_newDz
-              mergeFac2 = hFacS_old(i,j,k+1,bi,bj)*drF(k+1)*r_newDz
-              vVel(i,j,k+1,bi,bj) = vVel(i,j, k ,bi,bj)*mergeFac1
-     &                            + vVel(i,j,k+1,bi,bj)*mergeFac2
-             ELSE
-              vVel(i,j,k+1,bi,bj) = 0.0
-             ENDIF
-             vVel(i,j,k,bi,bj) = 0.0
-#ifdef ALLOW_ADAMSBASHFORTH_3
-#else
-             IF (newvol.gt.zeroRS) THEN
-              gvNm1(i,j,k+1,bi,bj) = gvNm1(i,j, k ,bi,bj)*mergeFac1
-     &                             + gvNm1(i,j,k+1,bi,bj)*mergeFac2
-             ELSE
-              gvNm1(i,j,k+1,bi,bj) = 0.0
-             ENDIF
-              gvNm1(i,j,k,bi,bj) = 0.0
-#endif
-            ENDIF
-
-          ENDDO
-         ENDDO
-        ENDDO
-
-        DO k=1,Nr-1
-         DO j=1,sNy
-          DO i=1,sNx
-            IF ( maskW(i,j,k,bi,bj).EQ.oneRS .AND.
-     &           hFacW_old(i,j,k,bi,bj).EQ.zeroRS ) THEN
-             uVel(i,j,k,bi,bj) = uVel(i,j,k+1,bi,bj)
-#ifdef ALLOW_ADAMSBASHFORTH_3
-#else
-             guNm1(i,j,k,bi,bj) = guNm1(i,j,k+1,bi,bj)
-#endif
-            ENDIF
-            IF ( maskS(i,j,k,bi,bj).EQ.oneRS .AND.
-     &           hFacS_old(i,j,k,bi,bj).EQ.zeroRS ) THEN
-             vVel(i,j,k,bi,bj) = vVel(i,j,k+1,bi,bj)
-#ifdef ALLOW_ADAMSBASHFORTH_3
-#else
-             gvNm1(i,j,k,bi,bj) = gvNm1(i,j,k+1,bi,bj)
-#endif
-            ENDIF
-          ENDDO
-         ENDDO
-        ENDDO
-
-       ENDDO
-      ENDDO
-
-      CALL EXCH_XYZ_RS( hFacC, myThid )
-      CALL EXCH_UV_XYZ_RS( hFacW, hFacS, .FALSE., myThid )
-      CALL EXCH_UV_XYZ_RS( maskW, maskS, .FALSE., myThid )
-      CALL EXCH_UV_XYZ_RL( uVel, vVel, .TRUE., myThid )
-#ifdef ALLOW_ADAMSBASHFORTH_3
-      CALL EXCH_UV_XYZ_RL( guNm(1-OLx,1-OLy,1,1,1,1),
-     &                     gvNm(1-OLx,1-OLy,1,1,1,1),.TRUE., myThid )
-      CALL EXCH_UV_XYZ_RL( guNm(1-OLx,1-OLy,1,1,1,2),
-     &                     gvNm(1-OLx,1-OLy,1,1,1,2),.TRUE., myThid )
-#else
-      CALL EXCH_UV_XYZ_RL( guNm1, gvNm1, .TRUE., myThid )
-#endif
-
-#endif /* ALLOW_SHELFICE_REMESHING */
-=======
 #endif /* SHELFICE_REMESH_PRINT */
 
->>>>>>> master
 #endif /* NONLIN_FRSURF */
 #endif /* ALLOW_SHELFICE_REMESHING */
       RETURN
