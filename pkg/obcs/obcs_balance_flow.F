@@ -59,14 +59,12 @@ C     msgBuf       :: Informational/error message buffer
       _RL tileAreaOB(nSx,nSy)
       _RL tileInFlow(nSx,nSy)
       LOGICAL flag
-	  _RL netFreshWaterFlux
+      _RL netFreshWaterFlux
       _RL shelfIceNetMassFlux
 C     KS16-- add params -----------
       _RL SEALEVEL, ETA
-
       
 
-	  
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 C-- Old method (OBCS_balanceFac < 0): balance each OB separately
@@ -373,7 +371,6 @@ C     KS16 end-----------------------------------------------------
      &        inFlow = inFlow + shelfIceNetMassFlux*mass2rUnit
 #endif
         ENDIF
->>>>>>> branch_remeshing
         inFlow = inFlow / areaOB
       ENDIF
       IF ( OBCS_balanceFacE.GE.0. ) flowE =  inFlow*OBCS_balanceFacE
