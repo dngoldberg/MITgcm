@@ -88,7 +88,7 @@ C  --  Finite Volume Form
              ddRloc = rC(k)-R_low(i,j,bi,bj)
              phiHydLow(i,j,bi,bj) = phiHydC(i,j)
      &        + ddRloc*gravFacC(k)*gravity*alphRho(i,j)*recip_rhoConst
-#if defined(ALLOW_PRESSURE_RELEASE_CODE) & defined(SHELFICE_ALLOW_GROUNDED_ICE)
+#if defined(ALLOW_PRESSURE_RELEASE_CODE) & defined(ALLOW_SHELFICE_GROUNDED_ICE)
              phiHydLowC(i,j,bi,bj) = phiHydC(i,j)-phiHydC_m(k)
 #endif
            ENDIF
@@ -113,7 +113,7 @@ C  --  Finite Difference Form
      &                  +( MIN(zeroRL,ddRloc)*ratioRm
      &                    +MAX(zeroRL,ddRloc)*ratioRp
      &                   )*gravity*alphRho(i,j)*recip_rhoConst
-#if defined(ALLOW_PRESSURE_RELEASE_CODE) & defined(SHELFICE_ALLOW_GROUNDED_ICE)
+#if defined(ALLOW_PRESSURE_RELEASE_CODE) & defined(ALLOW_SHELFICE_GROUNDED_ICE)
              phiHydLowC(i,j,bi,bj) = phiHydC(i,j)-phiHydC_m(k)
 #endif
            ENDIF
