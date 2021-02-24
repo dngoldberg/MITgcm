@@ -145,30 +145,22 @@ C     update cell-centered grid factors and mask: maskC, h0FacC, recip_hFacC
            ENDIF
           ENDIF
 
-C-- MERGE CELLS
-!<<<<<<< HEAD
-!          IF ( kTopC(i,j,bi,bj).LT.kLowC (i,j,bi,bj) ) THEN
-!           k = MAX(1,kTopC(i,j,bi,bj))
-!           IF ( hFac_surfC(i,j,bi,bj) .LT.
-!     &          SHELFICEmergeThreshold ) THEN
-!            IF ( (hFac_surfC(i,j,bi,bj)*drF(k)*recip_drF(k+1)+1) .LT.
-!     &          SHELFICEsplitThreshold ) THEN
-!
-!!             print *, "GOT HERE MERGE", i,j,k,myiter
-!
-!             adjust = R_shelfice(i,j,bi,bj)-rF(k+1)
-!             eta_old = etaH(i,j,bi,bj)
-!=======
-          IF ( ks.NE.0 .AND. ks.LT.kLowC (i,j,bi,bj) ) THEN
+cdg EXTRA CASE WHERE kLowC IS ZERO 
+cdg TO TEST WHERE shelficeMass IS NONZERO
+          IF ( (ks.NE.0 .OR. shelficeMass(i,j,bi,bj).GT.0.0) 
+     &         .AND. ks.LT.kLowC (i,j,bi,bj) ) THEN
            IF ( hFac_surfC(i,j,bi,bj).LT.SHELFICEmergeThreshold ) THEN
             IF ( (hFac_surfC(i,j,bi,bj)*drF(ks)*recip_drF(ks+1)+1)
      &           .LT.SHELFICEsplitThreshold ) THEN
+
+             IF (ks.eq.0) THEN
+              ks = 1
+             ENDIF
 
              k1 = ks
              k2 = ks+1
              kSurfC(i,j,bi,bj) = k2
              adjust = R_shelfIce(i,j,bi,bj)-rF(k2)
-!>>>>>>> master
 #ifdef SHELFICE_REMESH_PRINT
              prtPoint = ( ioUnit.GE.0 ) .AND.
      &          ( i.GE.1 .AND. i.LE.sNx .AND. j.GE.1 .AND. j.LE.sNy )
