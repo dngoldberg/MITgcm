@@ -84,7 +84,12 @@ C     msgBuf  :: Informational/error message buffer
           k1SurfC(i,j,bi,bj) = kSurfC(i,j,bi,bj)
           mrgFacC(i,j,1,bi,bj) = 0.
           mrgFacC(i,j,2,bi,bj) = 0.
-          ks = kTopC(i,j,bi,bj)
+          if(kTopC(i,j,bi,bj).eq.0.and.
+     &       shelficeMass(i,j,bi,bj).gt.0.0) then
+           ks = 1
+          else
+           ks = kTopC(i,j,bi,bj)
+          endif
 
           IF ( ks.NE.0 ) THEN
 C-- SPLIT CELLS
@@ -147,15 +152,10 @@ C     update cell-centered grid factors and mask: maskC, h0FacC, recip_hFacC
 
 cdg EXTRA CASE WHERE kLowC IS ZERO 
 cdg TO TEST WHERE shelficeMass IS NONZERO
-          IF ( (ks.NE.0 .OR. shelficeMass(i,j,bi,bj).GT.0.0) 
-     &         .AND. ks.LT.kLowC (i,j,bi,bj) ) THEN
+          IF ( ks.NE.0 .AND. ks.LT.kLowC (i,j,bi,bj) ) THEN
            IF ( hFac_surfC(i,j,bi,bj).LT.SHELFICEmergeThreshold ) THEN
             IF ( (hFac_surfC(i,j,bi,bj)*drF(ks)*recip_drF(ks+1)+1)
      &           .LT.SHELFICEsplitThreshold ) THEN
-
-             IF (ks.eq.0) THEN
-              ks = 1
-             ENDIF
 
              k1 = ks
              k2 = ks+1
