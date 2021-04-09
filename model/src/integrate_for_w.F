@@ -23,6 +23,10 @@ C     == GLobal variables ==
 #include "PARAMS.h"
 #include "GRID.h"
 #include "SURFACE.h"
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+#include "DYNVARS.h"
+#endif
+
 
 C     !INPUT/OUTPUT PARAMETERS:
 C     == Routine arguments ==
@@ -54,6 +58,10 @@ C     conv2d         :: horizontal transport convergence [m^3/s]
       _RL uTrans(1-OLx:sNx+OLx,1-OLy:sNy+OLy)
       _RL vTrans(1-OLx:sNx+OLx,1-OLy:sNy+OLy)
       _RL conv2d(1-OLx:sNx+OLx,1-OLy:sNy+OLy)
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+!      _RL rTmp
+      INTEGER kl, ks
+#endif
 CEOP
 
 C--   Calculate velocity field "volume transports" through
@@ -84,6 +92,81 @@ C     tracer cell faces (anelastic: scaled as a mass transport).
        ENDDO
       ENDIF
 #endif /* ALLOW_ADDFLUID */
+#ifdef ALLOW_PRESSURE_RELEASE_CODE
+       DO j=1,sNy
+        DO i=1,sNx
+          kl = kLowC(i,j,bi,bj)
+          ks = kSurfC(i,j,bi,bj)
+
+          if (ks .gt. 0) then
+
+           if ((k.eq.ks).and.(kl.eq.ks)) then
+
+            conv2d(i,j) = conv2d(i,j) +
+     &       _dyG(i,j,bi,bj)*
+     &       pReleaseTransX(i,j,bi,bj)
+            conv2d(i,j) = conv2d(i,j) -
+     &       _dyG(i+1,j,bi,bj)*
+     &       pReleaseTransX(i+1,j,bi,bj)
+            conv2d(i,j) = conv2d(i,j) +
+     &       _dxG(i,j,bi,bj)*
+     &       pReleaseTransY(i,j,bi,bj)
+            conv2d(i,j) = conv2d(i,j) -
+     &       _dxG(i,j+1,bi,bj)*
+     &       pReleaseTransY(i+1,j,bi,bj)
+
+           elseif (k.eq.kl) then
+
+             if (k.le.kSurfC(i-1,j,bi,bj)) then
+               conv2d(i,j) = conv2d(i,j) +
+     &           _dyG(i,j,bi,bj)*
+     &           pReleaseTransX(i,j,bi,bj)
+             endif
+             if (k.le.kSurfC(i+1,j,bi,bj)) then
+               conv2d(i,j) = conv2d(i,j) -
+     &           _dyG(i+1,j,bi,bj)*
+     &           pReleaseTransX(i+1,j,bi,bj)
+             endif
+             if (k.le.kSurfC(i,j-1,bi,bj)) then
+               conv2d(i,j) = conv2d(i,j) +
+     &           _dxG(i,j,bi,bj)*
+     &           pReleaseTransY(i,j,bi,bj)
+             endif
+             if (k.le.kSurfC(i,j+1,bi,bj)) then
+               conv2d(i,j) = conv2d(i,j) -
+     &           _dxG(i,j+1,bi,bj)*
+     &           pReleaseTransY(i,j+1,bi,bj)
+             endif
+
+           elseif (k.eq.ks) then
+
+             if (k.ge.kLowC(i-1,j,bi,bj)) then
+               conv2d(i,j) = conv2d(i,j) +
+     &           _dyG(i,j,bi,bj)*
+     &           pReleaseTransX(i,j,bi,bj)
+             endif
+             if (k.ge.kLowC(i+1,j,bi,bj)) then
+               conv2d(i,j) = conv2d(i,j) -
+     &           _dyG(i+1,j,bi,bj)*
+     &           pReleaseTransX(i+1,j,bi,bj)
+             endif
+             if (k.ge.kLowC(i,j-1,bi,bj)) then
+               conv2d(i,j) = conv2d(i,j) +
+     &           _dxG(i,j,bi,bj)*
+     &           pReleaseTransY(i,j,bi,bj)
+             endif
+             if (k.ge.kLowC(i,j+1,bi,bj)) then
+               conv2d(i,j) = conv2d(i,j) -
+     &           _dxG(i,j+1,bi,bj)*
+     &           pReleaseTransY(i,j+1,bi,bj)
+             endif
+
+           endif
+          endif
+
+        ENDDO
+       ENDDO
+#endif
 
 C--   Calculate vertical "volume transport" through face k
 C     between tracer cell k-1 & k
