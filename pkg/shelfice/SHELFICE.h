@@ -123,7 +123,7 @@ CEOP
      &     shiCdrag, shiZetaN, shiRc,
      &     shiPrandtl, shiSchmidt, shiKinVisc,
      &     SHELFICEremeshFrequency,
-     &     SHELFICEsplitThreshold, SHELFICEmergeThreshold
+     &     SHELFICEsplitThreshold, SHELFICEmergeThreshold,
      &     SHELFICEptracConc, shelfice_forcing_period		 
 
       _RL SHELFICE_dumpFreq, SHELFICE_taveFreq
