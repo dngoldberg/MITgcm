@@ -194,6 +194,7 @@ c     ENDIF
      &                      shelfIceMassDynTendency, 0, myThid )
       ENDIF
 
+
 #ifdef ALLOW_DIAGNOSTICS
       IF ( useDiagnostics ) THEN
        diagName  = 'SHIfwFlx'

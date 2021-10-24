@@ -124,6 +124,7 @@ CEOP
      &     shiPrandtl, shiSchmidt, shiKinVisc,
      &     SHELFICEremeshFrequency,
      &     SHELFICEsplitThreshold, SHELFICEmergeThreshold
+     &     SHELFICEptracConc, shelfice_forcing_period		 
 
       _RL SHELFICE_dumpFreq, SHELFICE_taveFreq
       _RL SHELFICEheatTransCoeff
@@ -140,12 +141,15 @@ CEOP
       _RL SHELFICEremeshFrequency
       _RL SHELFICEsplitThreshold
       _RL SHELFICEmergeThreshold
+      _RL SHELFICEptracConc
+      _RL shelfice_forcing_period		  
 
       COMMON /SHELFICE_FIELDS_RL/
      &     shelficeMass, shelficeMassInit,
      &     shelficeLoadAnomaly,
      &     shelficeForcingT, shelficeForcingS,
-     &     shiTransCoeffT, shiTransCoeffS
+     &     shiTransCoeffT, shiTransCoeffS, shelficeSubglFlux,
+     &     shelficeSubglFlux0, shelficeSubglFlux1
       _RL shelficeMass          (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL shelficeMassInit      (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL shelficeLoadAnomaly   (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
@@ -153,6 +157,9 @@ CEOP
       _RL shelficeForcingS      (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL shiTransCoeffT        (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL shiTransCoeffS        (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RL shelficeSubglFlux     (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RL shelficeSubglFlux0    (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RL shelficeSubglFlux1    (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
 
       COMMON /SHELFICE_FIELDS_RS/
      &     R_shelfIce,
@@ -193,6 +200,7 @@ CEOP
       LOGICAL SHELFICE_oldCalcUStar
       LOGICAL SHELFICEMassStepping
       LOGICAL SHELFICEDynMassOnly
+      LOGICAL SHELFICEaddRunoff
       COMMON /SHELFICE_PARMS_L/
      &     SHELFICEisOn,
      &     useISOMIPTD,
@@ -210,18 +218,22 @@ CEOP
      &     SHELFICEuseGammaFrict,
      &     SHELFICE_oldCalcUStar,
      &     SHELFICEMassStepping,
-     &     SHELFICEDynMassOnly
+     &     SHELFICEDynMassOnly, SHELFICEaddRunoff
 
       CHARACTER*(MAX_LEN_FNAM) SHELFICEloadAnomalyFile
       CHARACTER*(MAX_LEN_FNAM) SHELFICEmassFile
       CHARACTER*(MAX_LEN_FNAM) SHELFICEtopoFile
       CHARACTER*(MAX_LEN_FNAM) SHELFICEMassDynTendFile
       CHARACTER*(MAX_LEN_FNAM) SHELFICETransCoeffTFile
+      CHARACTER*(MAX_LEN_FNAM) SHELFICESubglFluxFile
+      CHARACTER*(MAX_LEN_FNAM) SHELFICESubglFluxTimeDepFile
       COMMON /SHELFICE_PARM_C/
      &     SHELFICEloadAnomalyFile,
      &     SHELFICEmassFile,
      &     SHELFICEtopoFile,
      &     SHELFICEMassDynTendFile,
-     &     SHELFICETransCoeffTFile
+     &     SHELFICETransCoeffTFile,
+     &     SHELFICESubglFluxFile,
+     &     SHELFICESubglFluxTimeDepFile
 
 #endif /* ALLOW_SHELFICE */

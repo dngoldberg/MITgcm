@@ -41,7 +41,10 @@ CEOP
           shelficeFreshWaterFlux(i,j,bi,bj) = 0. _d 0
           shiTransCoeffT        (i,j,bi,bj) = 0. _d 0
           shiTransCoeffS        (i,j,bi,bj) = 0. _d 0
+          shelficeSubglFlux     (i,j,bi,bj) = 0. _d 0
           shelficeMass          (i,j,bi,bj) = 0. _d 0
+          shelficeSubglFlux0    (i,j,bi,bj) = 0. _d 0
+          shelficeSubglFlux1    (i,j,bi,bj) = 0. _d 0
          ENDDO
         ENDDO
        ENDDO
@@ -90,6 +93,13 @@ C     set coefficients to constant values
      &     ( nIter0.NE.0 .OR. startTime.NE.baseTime
      &                   .OR. pickupSuff.NE.' ') ) THEN
         CALL SHELFICE_READ_PICKUP( 1, nIter0, myThid )
+      ENDIF
+
+      IF ( SHELFICEaddrunoff .AND.
+     &     SHELFICESubglFluxFile .NE. ' ' ) THEN
+       CALL READ_FLD_XY_RS( SHELFICESubglFluxFile, ' ',
+     &                      shelficeSubglFlux, 0, myThid )
+       _EXCH_XY_RL( shelficeSubglFlux, myThid )
       ENDIF
 
 #ifdef ALLOW_COST

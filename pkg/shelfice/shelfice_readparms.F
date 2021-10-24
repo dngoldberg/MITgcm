@@ -49,6 +49,7 @@ CEOP
      &     SHELFICEthetaSurface,
      &     useISOMIPTD,
      &     SHELFICEconserve, SHELFICEboundaryLayer,
+     &     SHELFICEaddRunoff,
      &     SHI_withBL_realFWflux, SHI_withBL_uStarTopDz,
      &     SHELFICEwriteState,
      &     SHELFICE_dumpFreq,
@@ -58,6 +59,7 @@ CEOP
      &     SHELFICEtopoFile,
      &     SHELFICEmassFile, SHELFICEloadAnomalyFile,
      &     SHELFICEMassDynTendFile, SHELFICETransCoeffTFile,
+     &     SHELFICESubglFluxFile, SHELFICESubglFluxTimeDepFile,      
      &     SHELFICEDynMassOnly,
      &     SHELFICEadvDiffHeatFlux,
      &     SHELFICEuseGammaFrict, SHELFICE_oldCalcUStar,
@@ -68,7 +70,8 @@ CEOP
      &     mult_shifwflx, wshifwflx0, shifwflx_errfile,
 #endif
      &     SHELFICEremeshFrequency,
-     &     SHELFICEsplitThreshold, SHELFICEmergeThreshold
+     &     SHELFICEsplitThreshold, SHELFICEmergeThreshold,
+     &     SHELFICEptracConc, shelfice_forcing_period      
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 
@@ -93,6 +96,7 @@ C Set defaults values for parameters in SHELFICE.h
       useISOMIPTD              = .FALSE.
       SHELFICEconserve         = .FALSE.
       SHELFICEboundaryLayer    = .FALSE.
+      SHELFICEaddrunoff        = .FALSE.
       SHI_withBL_realFWflux    = .FALSE.
       SHI_withBL_uStarTopDz    = .FALSE.
       SHELFICEMassStepping     = .FALSE.
@@ -102,6 +106,8 @@ C Set defaults values for parameters in SHELFICE.h
       SHELFICEloadAnomalyFile  = ' '
       SHELFICEMassDynTendFile  = ' '
       SHELFICETransCoeffTFile  = ' '
+      SHELFICESubglFluxFile    = ' '
+      SHELFICESubglFluxTimeDepFile    = ' '
       SHELFICElatentHeat       =  334.0 _d 3
       SHELFICEHeatCapacity_Cp  = 2000.0 _d 0
       rhoShelfIce              =  917.0 _d 0
@@ -109,6 +115,8 @@ C Set defaults values for parameters in SHELFICE.h
       SHELFICEsaltTransCoeff   = UNSET_RL
       SHELFICEkappa            =   1.54 _d -06
       SHELFICEthetaSurface     = - 20.0 _d 0
+      SHELFICEptracConc        = 0. _d 0
+      shelfice_forcing_period  = 0. _d 0
       no_slip_shelfice         = no_slip_bottom
       SHELFICEDragLinear       = bottomDragLinear
       SHELFICEDragQuadratic    = UNSET_RL
