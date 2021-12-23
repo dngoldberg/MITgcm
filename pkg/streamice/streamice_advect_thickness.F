@@ -36,8 +36,12 @@ C     === Global variables ===
 #ifdef ALLOW_STREAMICE
 
       INTEGER i, j, bi, bj, Gi, Gj, k
+      _RL mask_val
       _RL thick_bd, uflux, vflux, max_icfl, loc_icfl
       _RL time_step_full, time_step_rem
+      _RL thick_val, thick_val0, thick_val1
+      _RL bed_val, bed_val0, bed_val1
+      _RL mask_val, cliff_ht, calve_rate, thick_float
       _RL sec_per_year, time_step_loc, MR, SMB, TMB, irho
       _RL BCVALX(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL BCVALY(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
@@ -49,6 +53,8 @@ C     === Global variables ===
       _RL h_after_vflux_SI(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL hflux_x_SI(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL hflux_y_SI(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RL hflux_x_SI_c(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RL hflux_y_SI_c(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
 
       CHARACTER*(MAX_LEN_MBUF) msgBuf
 
@@ -84,6 +90,8 @@ CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
 
           hflux_x_SI (i,j,bi,bj) = 0. _d 0
           hflux_y_SI (i,j,bi,bj) = 0. _d 0
+          hflux_x_SI_c (i,j,bi,bj) = 0. _d 0
+          hflux_y_SI_c (i,j,bi,bj) = 0. _d 0
           
           IF (STREAMICE_hmask(i,j,bi,bj).eq.1.0) THEN
            h_after_uflux_SI(i,j,bi,bj) = 0. _d 0
@@ -339,11 +347,100 @@ CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
 
 ! NOTE: AT THIS POINT H IS NOT VALID ON OVERLAP!!!
 
+      _EXCH_XY_RL( H_streamice, myThid )
+      _EXCH_XY_RL( area_shelf_streamice, myThid )
+      _EXCH_XY_RS( STREAMICE_hmask, myThid )
+
+      DO bj=myByLo(myThid),myByHi(myThid)
+       DO bi=myBxLo(myThid),myBxHi(myThid)
+        DO j=1,sNy
+         DO i=1,sNx
+          
+          IF (STREAMICE_hmask(i,j,bi,bj).eq.1.0) THEN
+
+           thick_val0 = H_streamice(i,j,bi,bj)
+           bed_val0 = R_low_si(i,j,bi,bj)
+           
+           DO k=1,2
+
+            mask_val = STREAMICE_hmask(i-3+2*k,j,bi,bj)
+            thick_val1 = H_streamice(i-3+2*k,j,bi,bj)
+            frac_val1 = area_shelf_streamice(i-3+2*k,j,bi,bj) / 
+     &                 rA(i-3+2*k,j,bi,bj)
+         
+            IF (mask_val.eq.0.0 .or. mask_val.eq.2.0) THEN
+
+             bed_val = (1-frac_val1)*bed_val0 + frac_val*bed_val1
+             thick_val = (1-frac_val1)*thick_val0 + frac_val*thick_val1
+             thick_float = -1.0*streamice_density_ocean_avg/
+     &                    streamice_density*bed_val
+
+             if (thick_val .gt. thick_float) then
+              cliff_ht = thick_float + max(0.0, bed_val)
+             else
+              cliff_ht = thick_val * 
+     &         (1.0 - streamice_density/streamice_density_ocean_avg)
+             endif
+
+          
+             calve_rate = 0.0
+             IF (cliff_ht .gt. 135.0) THEN
+              calve_rate = 1.9e-16 * cliff_ht**7.3 * 365.
+             ENDIF
+
+             hflux_x_SI_c(i-3+2*k,j,bi,bj) = 
+     &           (2.*REAL(k)-3.) * calve_rate * thick_val
+
+            ENDIF  
+
+            mask_val = STREAMICE_hmask(i,j-3+2*k,bi,bj)
+            thick_val1 = H_streamice(i,j-3+2*k,bi,bj)
+            frac_val1 = area_shelf_streamice(i,j-3+2*k,bi,bj) /
+     &                 rA(i,j-3+2*k,bi,bj)
+
+            IF (mask_val.eq.0.0 .or. mask_val.eq.2.0) THEN
+
+             bed_val = (1-frac_val1)*bed_val0 + frac_val*bed_val1
+             thick_val = (1-frac_val1)*thick_val0 + frac_val*thick_val1
+             thick_float = -1.0*streamice_density_ocean_avg/
+     &                    streamice_density*bed_val
+
+             if (thick_val .gt. thick_float) then
+              cliff_ht = thick_float + max(0.0, bed_val)
+             else
+              cliff_ht = thick_val *
+     &         (1.0 - streamice_density/streamice_density_ocean_avg)
+             endif
+
+             calve_rate = 0.0
+             IF (cliff_ht .gt. 135.0) THEN
+              calve_rate = 1.9e-16 * cliff_ht**7.3 * 365.
+             ENDIF
+
+             hflux_y_SI_c(i,j-3+2*k,bi,bj) =
+     &           (2.*REAL(k)-3.) * calve_rate * thick_val
+
+            ENDIF
+
+           ENDDO
+            
+ 
+          ENDIF
+         ENDDO
+        ENDDO
+       ENDDO
+      ENDDO
+
+      _EXCH_XY_RL( hflux_x_SI_c, myThid )
+      _EXCH_XY_RL( hflux_y_SI_c, myThid )
+
       if (streamice_move_front) then
       CALL STREAMICE_ADV_FRONT (
      &  myThid, time_step_loc,
-     &  hflux_x_SI, hflux_y_SI )
+     &  hflux_x_SI, hflux_y_SI,
+     &  hflux_x_SI_c, flux_y_SI_c )
       endif
+
 
 #ifdef ALLOW_STREAMICE_2DTRACER
       CALL STREAMICE_ADVECT_2DTRACER(
