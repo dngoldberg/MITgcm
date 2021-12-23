@@ -58,6 +58,7 @@ C     === Global variables ===
       _RL n_flux_1, n_flux_2
       _RL href, rho, partial_vol, tot_flux, hpot
       _RL tot_advflux, vol_budget, cell_vol
+      _RL tot_advflux
   
       CHARACTER*(MAX_LEN_MBUF) msgBuf
       _RL hflux_x_SI (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
