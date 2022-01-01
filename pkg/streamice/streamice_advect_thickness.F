@@ -36,11 +36,11 @@ C     === Global variables ===
 #ifdef ALLOW_STREAMICE
 
       INTEGER i, j, bi, bj, Gi, Gj, k
-      _RL mask_val
-      _RL thick_bd, uflux, vflux, max_icfl, loc_icfl
+      _RL uflux, vflux, max_icfl, loc_icfl
       _RL time_step_full, time_step_rem
       _RL thick_val, thick_val0, thick_val1
       _RL bed_val, bed_val0, bed_val1
+      _RL frac_val1
       _RL mask_val, cliff_ht, calve_rate, thick_float
       _RL sec_per_year, time_step_loc, MR, SMB, TMB, irho
       _RL BCVALX(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
@@ -365,13 +365,14 @@ CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
 
             mask_val = STREAMICE_hmask(i-3+2*k,j,bi,bj)
             thick_val1 = H_streamice(i-3+2*k,j,bi,bj)
+            bed_val1 = R_low_si(i-3+2*k,j,bi,bj)
             frac_val1 = area_shelf_streamice(i-3+2*k,j,bi,bj) / 
      &                 rA(i-3+2*k,j,bi,bj)
          
             IF (mask_val.eq.0.0 .or. mask_val.eq.2.0) THEN
 
-             bed_val = (1-frac_val1)*bed_val0 + frac_val*bed_val1
-             thick_val = (1-frac_val1)*thick_val0 + frac_val*thick_val1
+             bed_val = (1-frac_val1)*bed_val0 + frac_val1*bed_val1
+             thick_val = (1-frac_val1)*thick_val0 + frac_val1*thick_val1
              thick_float = -1.0*streamice_density_ocean_avg/
      &                    streamice_density*bed_val
 
@@ -395,13 +396,14 @@ CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
 
             mask_val = STREAMICE_hmask(i,j-3+2*k,bi,bj)
             thick_val1 = H_streamice(i,j-3+2*k,bi,bj)
+            bed_val1 = R_low_si(i,j-3+2*k,bi,bj)
             frac_val1 = area_shelf_streamice(i,j-3+2*k,bi,bj) /
      &                 rA(i,j-3+2*k,bi,bj)
 
             IF (mask_val.eq.0.0 .or. mask_val.eq.2.0) THEN
 
-             bed_val = (1-frac_val1)*bed_val0 + frac_val*bed_val1
-             thick_val = (1-frac_val1)*thick_val0 + frac_val*thick_val1
+             bed_val = (1-frac_val1)*bed_val0 + frac_val1*bed_val1
+             thick_val = (1-frac_val1)*thick_val0 + frac_val1*thick_val1
              thick_float = -1.0*streamice_density_ocean_avg/
      &                    streamice_density*bed_val
 
@@ -438,7 +440,7 @@ CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
       CALL STREAMICE_ADV_FRONT (
      &  myThid, time_step_loc,
      &  hflux_x_SI, hflux_y_SI,
-     &  hflux_x_SI_c, flux_y_SI_c )
+     &  hflux_x_SI_c, hflux_y_SI_c )
       endif
 
 

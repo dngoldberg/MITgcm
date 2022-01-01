@@ -57,8 +57,7 @@ C     === Global variables ===
       _RL iter_flag
       _RL n_flux_1, n_flux_2
       _RL href, rho, partial_vol, tot_flux, hpot
-      _RL tot_advflux, vol_budget, cell_vol
-      _RL tot_advflux
+      _RL tot_adv_flux, vol_budget, cell_vol
   
       CHARACTER*(MAX_LEN_MBUF) msgBuf
       _RL hflux_x_SI (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
@@ -128,8 +127,8 @@ C     === Global variables ===
              href = 0. _d 0
              tot_flux = 0. _d 0
              tot_adv_flux = 0. _d 0
-             do i=1,4
-              face_flux_wts(:) = 0. _d 0
+             do k=1,4
+              face_flux_wts(k) = 0. _d 0
              enddo
 
              DO k=1,2
@@ -157,7 +156,7 @@ C     === Global variables ===
                  if (iter_count .gt. 0) then
                    href = href + H_streamice(i,j+2*k-3,bi,bj)
                  else
-                   href = href + H_streamice(i,j+2*k-3,j,bi,bj) * 
+                   href = href + H_streamice(i,j+2*k-3,bi,bj) * 
      &                hflux_y_SI_v(i,j-1+k,bi,bj) * 
      &                dxG(i,j-1+k,bi,bj)
                    tot_adv_flux = tot_adv_flux + 
@@ -176,9 +175,9 @@ C     === Global variables ===
                IF (face_flux_wts(k).lt.0.0) THEN
                  WRITE(msgBuf,'(A,I5,I5)') 
      &             'ADV FRONT: FACE ADV FLUX NEGATIVE',i,j
-                 CALL PRINT_ERROR(msgBug, myThid)
+                 CALL PRINT_ERROR(msgBuf, myThid)
                ENDIF
-             ENDIF
+             ENDDO
 
              IF (n_flux_1 .gt. 0.) THEN
 
@@ -309,7 +308,7 @@ C     === Global variables ===
                    ENDIF
                  ENDDO
                  DO k=1,2
-                   IF ( (STREAMICE_vfacemask (i,j-1+k,bi,bj).eq.2.0) .or.
+                   IF ( (STREAMICE_vfacemask (i,j-1+k,bi,bj).eq.2.0).or.
      &               (STREAMICE_calve_to_mask .and.
      &                STREAMICE_calve_mask(i,j+2*k-3,bi,bj).ne.1.0)
      &               ) THEN  ! at a permanent calving boundary - no advance allowed
