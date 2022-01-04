@@ -373,11 +373,11 @@ CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
 
              bed_val = (1-frac_val1)*bed_val0 + frac_val1*bed_val1
              thick_val = (1-frac_val1)*thick_val0 + frac_val1*thick_val1
-             thick_float = -1.0*streamice_density_ocean_avg/
-     &                    streamice_density*bed_val
+             thick_float = max(-1.0*streamice_density_ocean_avg/
+     &                    streamice_density*bed_val,0.)
 
              if (thick_val .gt. thick_float) then
-              cliff_ht = thick_float + max(0.0, bed_val)
+              cliff_ht = thick_val + min(0.0, bed_val)
              else
               cliff_ht = thick_val * 
      &         (1.0 - streamice_density/streamice_density_ocean_avg)
@@ -385,12 +385,12 @@ CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
 
           
              calve_rate = 0.0
-             IF (cliff_ht .gt. 135.0) THEN
+             IF (cliff_ht .gt. 0.0) THEN
               calve_rate = 1.9e-16 * cliff_ht**7.3 * 365.
              ENDIF
 
              hflux_x_SI_c(i-3+2*k,j,bi,bj) = 
-     &           (2.*REAL(k)-3.) * calve_rate * thick_val
+     &           (3.-2.*REAL(k)) * calve_rate * thick_val
 
             ENDIF  
 
@@ -404,23 +404,23 @@ CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
 
              bed_val = (1-frac_val1)*bed_val0 + frac_val1*bed_val1
              thick_val = (1-frac_val1)*thick_val0 + frac_val1*thick_val1
-             thick_float = -1.0*streamice_density_ocean_avg/
-     &                    streamice_density*bed_val
+             thick_float = max(-1.0*streamice_density_ocean_avg/
+     &                    streamice_density*bed_val,0.)
 
              if (thick_val .gt. thick_float) then
-              cliff_ht = thick_float + max(0.0, bed_val)
+              cliff_ht = thick_val + min(0.0, bed_val)
              else
               cliff_ht = thick_val *
      &         (1.0 - streamice_density/streamice_density_ocean_avg)
              endif
 
              calve_rate = 0.0
-             IF (cliff_ht .gt. 135.0) THEN
+             IF (cliff_ht .gt. 0.0) THEN
               calve_rate = 1.9e-16 * cliff_ht**7.3 * 365.
              ENDIF
 
              hflux_y_SI_c(i,j-3+2*k,bi,bj) =
-     &           (2.*REAL(k)-3.) * calve_rate * thick_val
+     &           (3.-2.*REAL(k)) * calve_rate * thick_val
 
             ENDIF
 
@@ -435,6 +435,19 @@ CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
 
       _EXCH_XY_RL( hflux_x_SI_c, myThid )
       _EXCH_XY_RL( hflux_y_SI_c, myThid )
+
+      DO bj=myByLo(myThid),myByHi(myThid)
+       DO bi=myBxLo(myThid),myBxHi(myThid)
+        DO j=1-oly,sNy+oly
+         DO i=1-olx,sNx+olx
+!          hflux_x_SI_c(i,j,bi,bj)=0.0 
+!          hflux_y_SI_c(i,j,bi,bj)=0.0 
+!          hflux_x_SI(i,j,bi,bj)=0.0 
+!          hflux_y_SI(i,j,bi,bj)=0.0 
+         ENDDO
+        ENDDO
+       ENDDO
+      ENDDO
 
       if (streamice_move_front) then
       CALL STREAMICE_ADV_FRONT (
@@ -483,9 +496,9 @@ CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
             STOP 'SHELFICE IS NOT ENABLED'
 #endif
            ELSE
-              MR = (1.-float_frac_streamice(i,j,bi,bj)) *
-     &             (BDOT_STREAMICE(i,j,bi,bj) +
-     &              BDOT_pert(i,j,bi,bj))
+              MR = (1.-float_frac_streamice(i,j,bi,bj)) * 200.
+!     &             (BDOT_STREAMICE(i,j,bi,bj) +
+!     &              BDOT_pert(i,j,bi,bj))
            ENDIF
 
            SMB = ADOT_STREAMICE(i,j,bi,bj)
@@ -500,6 +513,11 @@ CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
                H_streamice (i,j,bi,bj) =
      &          H_streamice (i,j,bi,bj) + TMB * time_step_loc
            ENDIF
+!           IF (float_frac_streamice(i,j,bi,bj) .LT. 1.0) THEN
+!               STREAMICE_hmask (i,j,bi,bj) = 0.0
+!               H_streamice (i,j,bi,bj) = 0.0
+!               area_shelf_streamice(i,j,bi,bj) = 0.0
+!           ENDIF
 
           ENDIF
          ENDDO
@@ -508,6 +526,8 @@ CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
       ENDDO
 
       _EXCH_XY_RL(H_streamice,myThid)
+      _EXCH_XY_RL(streamice_hmask,myThid)
+      _EXCH_XY_RL(area_shelf_streamice,myThid)
 
       WRITE(msgBuf,'(A)') 'END STREAMICE_ADVECT_THICKNESS'
        CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,

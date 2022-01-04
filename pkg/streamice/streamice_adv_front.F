@@ -65,6 +65,16 @@ C     === Global variables ===
       _RL hflux_x_SI2 (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL hflux_y_SI2 (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
 
+
+      CALL DIAGNOSTICS_FILL(hflux_x_SI_v,'VFLUX_X ',
+     &      0,1,0,1,1,myThid)
+      CALL DIAGNOSTICS_FILL(hflux_y_SI_v,'VFLUX_Y ',
+     &      0,1,0,1,1,myThid)
+      CALL DIAGNOSTICS_FILL(hflux_x_SI_c,'CFLUX_X ',
+     &      0,1,0,1,1,myThid)
+      CALL DIAGNOSTICS_FILL(hflux_y_SI_c,'CFLUX_Y ',
+     &      0,1,0,1,1,myThid)
+
       rho = streamice_density
       iter_flag = 1. _d 0
       iter_rpt = 0
@@ -84,7 +94,7 @@ C     === Global variables ===
          ENDDO
         ENDDO
 
-      DO iter_count = 0, 3
+      DO iter_count = 0, 0
 
 
        IF ( iter_flag .GT. 0. ) THEN
@@ -138,16 +148,17 @@ C     === Global variables ===
                    href = href + H_streamice(i+2*k-3,j,bi,bj)
                  else
                    href = href + H_streamice(i+2*k-3,j,bi,bj) * 
-     &                hflux_x_SI_v(i-1+k,j,bi,bj) * 
+     &                ABS(hflux_x_SI_v(i-1+k,j,bi,bj)) * 
      &                dyG(i-1+k,j,bi,bj)
                    tot_adv_flux = tot_adv_flux + 
-     &                hflux_x_SI_v(i-1+k,j,bi,bj) *
+     &                ABS(hflux_x_SI_v(i-1+k,j,bi,bj)) *
      &                dyG(i-1+k,j,bi,bj)
-                   face_flux_wts(k) = hflux_x_SI_v(i-1+k,j,bi,bj) *
+                   face_flux_wts(k) = ABS(hflux_x_SI_v(i-1+k,j,bi,bj)) *
      &                dyG(i-1+k,j,bi,bj)
                  endif
                  tot_flux = tot_flux + hflux_x_SI(i-1+k,j,bi,bj) *
-     &              dyG(i-1+k,j,bi,bj) * time_step
+     &            (3.0 - 2.0 * k) *   
+     &            dyG(i-1+k,j,bi,bj) * time_step
                  hflux_x_SI(i-1+k,j,bi,bj) = 0. _d 0
                ENDIF
    
@@ -157,16 +168,17 @@ C     === Global variables ===
                    href = href + H_streamice(i,j+2*k-3,bi,bj)
                  else
                    href = href + H_streamice(i,j+2*k-3,bi,bj) * 
-     &                hflux_y_SI_v(i,j-1+k,bi,bj) * 
+     &                ABS(hflux_y_SI_v(i,j-1+k,bi,bj)) * 
      &                dxG(i,j-1+k,bi,bj)
                    tot_adv_flux = tot_adv_flux + 
-     &                hflux_y_SI_v(i,j-1+k,bi,bj) *
+     &                ABS(hflux_y_SI_v(i,j-1+k,bi,bj)) *
      &                dxG(i,j-1+k,bi,bj)
-                   face_flux_wts(k+2) = hflux_y_SI_v(i,j-1+k,bi,bj) *
+                   face_flux_wts(k+2)=ABS(hflux_y_SI_v(i,j-1+k,bi,bj)) *
      &                dxG(i,j-1+k,bi,bj)
                  endif
                  tot_flux = tot_flux + hflux_y_SI(i,j-1+k,bi,bj) *
-     &              dxG(i,j-1+k,bi,bj) * time_step
+     &            (3.0 - 2.0 * k) *   
+     &            dxG(i,j-1+k,bi,bj) * time_step
                  hflux_y_SI(i,j-1+k,bi,bj) = 0. _d 0
                ENDIF
              ENDDO
@@ -328,6 +340,7 @@ C     === Global variables ===
                    DO k=1,2
                      IF (new_partial(k) .eq. 1) THEN
                        hflux_x_SI2(i-1+k,j,bi,bj) =
+     &                   (-3.0 + 2.0 * k) *   
      &                   partial_vol/time_step/n_flux_2/
      &                   dxG(i-1+k,j,bi,bj)
                      ENDIF
@@ -336,6 +349,7 @@ C     === Global variables ===
                    DO k=1,2
                      IF (new_partial(k+2) .eq. 1) THEN
                        hflux_y_SI2(i,j-1+k,bi,bj) =
+     &                   (-3.0 + 2.0 * k) *   
      &                   partial_vol/time_step/n_flux_2/
      &                   dxG(i,j-1+k,bi,bj)
                      ENDIF

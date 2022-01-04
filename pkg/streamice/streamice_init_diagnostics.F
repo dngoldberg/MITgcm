@@ -139,6 +139,34 @@ c     INTEGER       diagMate
       CALL DIAGNOSTICS_ADDTOLIST( diagNum,
      I      diagName, diagCode, diagUnits, diagTitle, 0, myThid )
 
+      diagName  = 'VFLUX_X '
+      diagTitle = 'Ice stream 2d tracer'
+      diagUnits = 'none       '
+      diagCode  = 'SM      L1      '
+      CALL DIAGNOSTICS_ADDTOLIST( diagNum,
+     I      diagName, diagCode, diagUnits, diagTitle, 0, myThid )
+
+      diagName  = 'VFLUX_Y '
+      diagTitle = 'Ice stream 2d tracer'
+      diagUnits = 'none       '
+      diagCode  = 'SM      L1      '
+      CALL DIAGNOSTICS_ADDTOLIST( diagNum,
+     I      diagName, diagCode, diagUnits, diagTitle, 0, myThid )
+
+      diagName  = 'CFLUX_X '
+      diagTitle = 'Ice stream 2d tracer'
+      diagUnits = 'none       '
+      diagCode  = 'SM      L1      '
+      CALL DIAGNOSTICS_ADDTOLIST( diagNum,
+     I      diagName, diagCode, diagUnits, diagTitle, 0, myThid )
+
+      diagName  = 'CFLUX_Y '
+      diagTitle = 'Ice stream 2d tracer'
+      diagUnits = 'none       '
+      diagCode  = 'SM      L1      '
+      CALL DIAGNOSTICS_ADDTOLIST( diagNum,
+     I      diagName, diagCode, diagUnits, diagTitle, 0, myThid )
+
       WRITE(msgBuf,'(A)') 'ADDED DIAGS TO LIST'
        CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
      &                     SQUEEZE_RIGHT , 1)
