@@ -247,11 +247,11 @@ C     === Global variables ===
  
                    ENDIF
 
-                   IF (face_flux_wts(k).gt.0.0) THEN
+                   IF (face_flux_wts(k+2).gt.0.0) THEN
    
-                     cell_vol = area_shelf_streamice(i+2*k-3,j,bi,bj) * 
-     &                          H_streamice(i+2*k-3,j,bi,bj)
-                     vol_budget = face_flux_wts(k)/tot_adv_flux *
+                     cell_vol = area_shelf_streamice(i,j+2*k-3,bi,bj) * 
+     &                          H_streamice(i,j+2*k-3,bi,bj)
+                     vol_budget = face_flux_wts(k+2)/tot_adv_flux *
      &                          partial_vol
  
                      IF (cell_vol + vol_budget .lt. 0.0) THEN
@@ -261,16 +261,16 @@ C     === Global variables ===
                        CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
      &                    SQUEEZE_RIGHT , 1)
 
-                       STREAMICE_hmask(i+2*k-3,j,bi,bj) = 0.0
-                       area_shelf_streamice(i+2*k-3,j,bi,bj) = 0.0
-                       H_streamice(i+2*k-3,j,bi,bj) = 0.0
+                       STREAMICE_hmask(i,j+2*k-3,bi,bj) = 0.0
+                       area_shelf_streamice(i,j+2*k-3,bi,bj) = 0.0
+                       H_streamice(i,j+2*k-3,bi,bj) = 0.0
   
                      ELSE
 
                        cell_vol = cell_vol + vol_budget
-                       STREAMICE_hmask(i+2*k-3,j,bi,bj) = 2.0
-                       area_shelf_streamice(i+2*k-3,j,bi,bj) = 
-     &                   cell_vol / H_streamice(i+2*k-3,j,bi,bj)
+                       STREAMICE_hmask(i,j+2*k-3,bi,bj) = 2.0
+                       area_shelf_streamice(i,j+2*k-3,bi,bj) = 
+     &                   cell_vol / H_streamice(i,j+2*k-3,bi,bj)
  
                      ENDIF
  
