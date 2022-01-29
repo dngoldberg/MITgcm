@@ -182,7 +182,7 @@ c**************************************
      &                           myiter )
        endif
 
-#endif // OAD_FP
+#endif /* OAD_FP */
 
       ENDIF
 
