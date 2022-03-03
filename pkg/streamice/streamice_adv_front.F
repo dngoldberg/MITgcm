@@ -58,6 +58,7 @@ C     === Global variables ===
       _RL n_flux_1, n_flux_2
       _RL href, rho, partial_vol, tot_flux, hpot
       _RL tot_adv_flux, vol_budget, cell_vol
+      LOGICAL grow_cell
   
       CHARACTER*(MAX_LEN_MBUF) msgBuf
       _RL hflux_x_SI (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
@@ -129,8 +130,15 @@ C     === Global variables ===
            DO i=1-1,sNx+1
             Gi = (myXGlobalLo-1)+(bi-1)*sNx+i
 
+            grow_cell = .false.
             IF (.not. STREAMICE_calve_to_mask .OR.
      &       STREAMICE_calve_mask (i,j,bi,bj) .eq. 1.0) THEN
+             grow_cell = .true.
+            ENDIF
+
+
+            IF (.true.) THEN
+
 
             IF ((Gi .ge. 1) .and. (Gi .le. Nx) .and.
      &          (STREAMICE_Hmask(i,j,bi,bj).eq.0.0 .or.
@@ -280,20 +288,20 @@ C     === Global variables ===
    
                  ENDDO
  
-               ELSEIF (hpot .eq. href) THEN ! cell is exactly covered, no overflow
+               ELSEIF (hpot .eq. href .and. grow_cell) THEN ! cell is exactly covered, no overflow
               
                  hmask_new (i,j,bi,bj) = 1.0
                  H_streamice (i,j,bi,bj) = href
                  area_shelf_streamice(i,j,bi,bj) =
      &            rA(i,j,bi,bj)
 
-               ELSEIF (hpot .lt. href) THEN ! cell still unfilled
+               ELSEIF (hpot .lt. href .and. grow_cell) THEN ! cell still unfilled
 
                  hmask_new (i,j,bi,bj) = 2.0
                  area_shelf_streamice (i,j,bi,bj) = partial_vol / href
                  H_streamice (i,j,bi,bj) = href
 
-               ELSE ! cell is filled - do overflow
+               ELSEIF (grow_cell) THEN ! cell is filled - do overflow
 
                  hmask_new (i,j,bi,bj) = 1.0
                  area_shelf_streamice(i,j,bi,bj) =
@@ -370,6 +378,7 @@ c
 c
       ENDIF
       ENDDO
+      
 
       DO bj=myByLo(myThid),myByHi(myThid)
        DO bi=myBxLo(myThid),myBxHi(myThid)
