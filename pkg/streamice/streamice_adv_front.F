@@ -169,7 +169,7 @@ C     === Global variables ===
                    face_adv_flux_wts(k) = 
      &                ABS(hflux_x_SI_v(i-1+k,j,bi,bj)) *
      &                dyG(i-1+k,j,bi,bj)
-                   IF ((k*2.-3.)*hflux_x_SI(i-1+k,j,bi,bj).lt.0.) THEN
+                   IF ((k*2.-3.)*hflux_x_SI(i-1+k,j,bi,bj).gt.0.) THEN
                     face_neg_flux_wts(k) = 
      &                ABS(hflux_x_SI(i-1+k,j,bi,bj)) *
      &                dyG(i-1+k,j,bi,bj)
@@ -198,8 +198,8 @@ C     === Global variables ===
                    face_adv_flux_wts(k+2)=
      &                ABS(hflux_y_SI_v(i,j-1+k,bi,bj)) *
      &                dxG(i,j-1+k,bi,bj)
-                   IF ((k*2.-3.)*hflux_y_SI(i,j-1+k,bi,bj).lt.0.) THEN
-                    face_neg_flux_wts(k) = 
+                   IF ((k*2.-3.)*hflux_y_SI(i,j-1+k,bi,bj).gt.0.) THEN
+                    face_neg_flux_wts(k+2) = 
      &                ABS(hflux_y_SI(i,j-1+k,bi,bj)) *
      &                dxG(i,j-1+k,bi,bj)
                     tot_neg_flux = tot_neg_flux + 
@@ -248,7 +248,6 @@ C     === Global variables ===
                  area_shelf_streamice(i,j,bi,bj) = 0.0
                 
                  DO k=1,2
-
                    IF (face_neg_flux_wts(k).gt.0.0) THEN
    
                      cell_vol = area_shelf_streamice(i+2*k-3,j,bi,bj) * 
@@ -278,7 +277,7 @@ C     === Global variables ===
  
                    ENDIF
 
-                   IF (face_adv_flux_wts(k+2).gt.0.0) THEN
+                   IF (face_neg_flux_wts(k+2).gt.0.0) THEN
    
                      cell_vol = area_shelf_streamice(i,j+2*k-3,bi,bj) * 
      &                          H_streamice(i,j+2*k-3,bi,bj)
