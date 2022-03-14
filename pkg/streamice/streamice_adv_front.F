@@ -51,13 +51,14 @@ C     === Global variables ===
 !
 !	  
       INTEGER new_partial(4)
-      _RL face_flux_wts(4)
+      _RL face_adv_flux_wts(4)
+      _RL face_neg_flux_wts(4)
       _RL face_thick_wts(4)  
       
       _RL iter_flag
       _RL n_flux_1, n_flux_2
       _RL href, rho, partial_vol, tot_flux, hpot
-      _RL tot_adv_flux, vol_budget, cell_vol
+      _RL tot_adv_flux, vol_budget, cell_vol, tot_neg_flux
       LOGICAL grow_cell
   
       CHARACTER*(MAX_LEN_MBUF) msgBuf
@@ -147,8 +148,10 @@ C     === Global variables ===
              href = 0. _d 0
              tot_flux = 0. _d 0
              tot_adv_flux = 0. _d 0
+             tot_neg_flux = 0. _d 0
              do k=1,4
-              face_flux_wts(k) = 0. _d 0
+              face_adv_flux_wts(k) = 0. _d 0
+              face_neg_flux_wts(k) = 0. _d 0
              enddo
 
              DO k=1,2
@@ -163,8 +166,17 @@ C     === Global variables ===
                    tot_adv_flux = tot_adv_flux + 
      &                ABS(hflux_x_SI_v(i-1+k,j,bi,bj)) *
      &                dyG(i-1+k,j,bi,bj)
-                   face_flux_wts(k) = ABS(hflux_x_SI_v(i-1+k,j,bi,bj)) *
+                   face_adv_flux_wts(k) = 
+     &                ABS(hflux_x_SI_v(i-1+k,j,bi,bj)) *
      &                dyG(i-1+k,j,bi,bj)
+                   IF ((k*2.-3.)*hflux_x_SI(i-1+k,j,bi,bj).lt.0.) THEN
+                    face_neg_flux_wts(k) = 
+     &                ABS(hflux_x_SI(i-1+k,j,bi,bj)) *
+     &                dyG(i-1+k,j,bi,bj)
+                    tot_neg_flux = tot_neg_flux + 
+     &                ABS(hflux_x_SI(i-1+k,j,bi,bj)) *
+     &                dyG(i-1+k,j,bi,bj)
+                   ENDIF
                  endif
                  tot_flux = tot_flux + hflux_x_SI(i-1+k,j,bi,bj) *
      &            (3.0 - 2.0 * k) *   
@@ -183,8 +195,17 @@ C     === Global variables ===
                    tot_adv_flux = tot_adv_flux + 
      &                ABS(hflux_y_SI_v(i,j-1+k,bi,bj)) *
      &                dxG(i,j-1+k,bi,bj)
-                   face_flux_wts(k+2)=ABS(hflux_y_SI_v(i,j-1+k,bi,bj)) *
+                   face_adv_flux_wts(k+2)=
+     &                ABS(hflux_y_SI_v(i,j-1+k,bi,bj)) *
      &                dxG(i,j-1+k,bi,bj)
+                   IF ((k*2.-3.)*hflux_y_SI(i,j-1+k,bi,bj).lt.0.) THEN
+                    face_neg_flux_wts(k) = 
+     &                ABS(hflux_y_SI(i,j-1+k,bi,bj)) *
+     &                dxG(i,j-1+k,bi,bj)
+                    tot_neg_flux = tot_neg_flux + 
+     &                ABS(hflux_y_SI(i,j-1+k,bi,bj)) *
+     &                dxG(i,j-1+k,bi,bj)
+                   ENDIF
                  endif
                  tot_flux = tot_flux + hflux_y_SI(i,j-1+k,bi,bj) *
      &            (3.0 - 2.0 * k) *   
@@ -194,7 +215,7 @@ C     === Global variables ===
              ENDDO
 
              DO k=1,4
-               IF (face_flux_wts(k).lt.0.0) THEN
+               IF (face_adv_flux_wts(k).lt.0.0) THEN
                  WRITE(msgBuf,'(A,I5,I5)') 
      &             'ADV FRONT: FACE ADV FLUX NEGATIVE',i,j
                  CALL PRINT_ERROR(msgBuf, myThid)
@@ -228,11 +249,11 @@ C     === Global variables ===
                 
                  DO k=1,2
 
-                   IF (face_flux_wts(k).gt.0.0) THEN
+                   IF (face_neg_flux_wts(k).gt.0.0) THEN
    
                      cell_vol = area_shelf_streamice(i+2*k-3,j,bi,bj) * 
      &                          H_streamice(i+2*k-3,j,bi,bj)
-                     vol_budget = face_flux_wts(k)/tot_adv_flux *
+                     vol_budget = face_neg_flux_wts(k)/tot_neg_flux *
      &                          partial_vol
        
                      IF (cell_vol + vol_budget .lt. 0.0) THEN
@@ -257,11 +278,11 @@ C     === Global variables ===
  
                    ENDIF
 
-                   IF (face_flux_wts(k+2).gt.0.0) THEN
+                   IF (face_adv_flux_wts(k+2).gt.0.0) THEN
    
                      cell_vol = area_shelf_streamice(i,j+2*k-3,bi,bj) * 
      &                          H_streamice(i,j+2*k-3,bi,bj)
-                     vol_budget = face_flux_wts(k+2)/tot_adv_flux *
+                     vol_budget = face_neg_flux_wts(k+2)/tot_neg_flux *
      &                          partial_vol
 
                      IF (cell_vol + vol_budget .lt. 0.0) THEN
