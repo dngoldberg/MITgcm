@@ -160,16 +160,17 @@ C     === Global variables ===
                  if (iter_count .gt. 0) then
                    href = href + H_streamice(i+2*k-3,j,bi,bj)
                  else
-                   href = href + H_streamice(i+2*k-3,j,bi,bj) * 
+                   IF ((k*2.-3.)*hflux_x_SI(i-1+k,j,bi,bj).lt.0.) THEN
+                    href = href + H_streamice(i+2*k-3,j,bi,bj) * 
      &                ABS(hflux_x_SI_v(i-1+k,j,bi,bj)) * 
      &                dyG(i-1+k,j,bi,bj)
-                   tot_adv_flux = tot_adv_flux + 
+                    tot_adv_flux = tot_adv_flux + 
      &                ABS(hflux_x_SI_v(i-1+k,j,bi,bj)) *
      &                dyG(i-1+k,j,bi,bj)
-                   face_adv_flux_wts(k) = 
+                    face_adv_flux_wts(k) = 
      &                ABS(hflux_x_SI_v(i-1+k,j,bi,bj)) *
      &                dyG(i-1+k,j,bi,bj)
-                   IF ((k*2.-3.)*hflux_x_SI(i-1+k,j,bi,bj).gt.0.) THEN
+                   ELSEIF ((k*2.-3.)*hflux_x_SI(i-1+k,j,bi,bj).gt.0.) THEN
                     face_neg_flux_wts(k) = 
      &                ABS(hflux_x_SI(i-1+k,j,bi,bj)) *
      &                dyG(i-1+k,j,bi,bj)
@@ -189,16 +190,17 @@ C     === Global variables ===
                  if (iter_count .gt. 0) then
                    href = href + H_streamice(i,j+2*k-3,bi,bj)
                  else
-                   href = href + H_streamice(i,j+2*k-3,bi,bj) * 
+                   IF ((k*2.-3.)*hflux_y_SI(i,j-1+k,bi,bj).lt.0.) THEN
+                    href = href + H_streamice(i,j+2*k-3,bi,bj) * 
      &                ABS(hflux_y_SI_v(i,j-1+k,bi,bj)) * 
      &                dxG(i,j-1+k,bi,bj)
-                   tot_adv_flux = tot_adv_flux + 
+                    tot_adv_flux = tot_adv_flux + 
      &                ABS(hflux_y_SI_v(i,j-1+k,bi,bj)) *
      &                dxG(i,j-1+k,bi,bj)
-                   face_adv_flux_wts(k+2)=
+                    face_adv_flux_wts(k+2)=
      &                ABS(hflux_y_SI_v(i,j-1+k,bi,bj)) *
      &                dxG(i,j-1+k,bi,bj)
-                   IF ((k*2.-3.)*hflux_y_SI(i,j-1+k,bi,bj).gt.0.) THEN
+                   ELSEIF ((k*2.-3.)*hflux_y_SI(i,j-1+k,bi,bj).gt.0.) THEN
                     face_neg_flux_wts(k+2) = 
      &                ABS(hflux_y_SI(i,j-1+k,bi,bj)) *
      &                dxG(i,j-1+k,bi,bj)
@@ -226,7 +228,9 @@ C     === Global variables ===
 
                IF (iter_count .eq. 0 .and. tot_adv_flux .gt. 0) THEN
                  href = href / tot_adv_flux
-               ELSE 
+               ELSEIF (iter_count .eq. 0) THEN
+                 href = H_streamice (i,j,bi,bj)
+               ELSE
                  href = href / n_flux_1
                ENDIF
 
@@ -318,7 +322,8 @@ C     === Global variables ===
                ELSEIF (hpot .lt. href .and. grow_cell) THEN ! cell still unfilled
 
                  hmask_new (i,j,bi,bj) = 2.0
-                 area_shelf_streamice (i,j,bi,bj) = partial_vol / href
+                 area_shelf_streamice (i,j,bi,bj) = partial_vol /
+     &              H_streamice (i,j,bi,bj)
                  H_streamice (i,j,bi,bj) = href
 
                ELSEIF (grow_cell) THEN ! cell is filled - do overflow
