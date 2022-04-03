@@ -51,14 +51,13 @@ C     === Global variables ===
 !
 !	  
       INTEGER new_partial(4)
-      _RL face_adv_flux_wts(4)
-      _RL face_neg_flux_wts(4)
+      _RL face_flux_wts(4)
       _RL face_thick_wts(4)  
       
       _RL iter_flag
       _RL n_flux_1, n_flux_2
       _RL href, rho, partial_vol, tot_flux, hpot
-      _RL tot_adv_flux, vol_budget, cell_vol, tot_neg_flux
+      _RL tot_adv_flux, vol_budget, cell_vol
       LOGICAL grow_cell
   
       CHARACTER*(MAX_LEN_MBUF) msgBuf
@@ -148,10 +147,8 @@ C     === Global variables ===
              href = 0. _d 0
              tot_flux = 0. _d 0
              tot_adv_flux = 0. _d 0
-             tot_neg_flux = 0. _d 0
              do k=1,4
-              face_adv_flux_wts(k) = 0. _d 0
-              face_neg_flux_wts(k) = 0. _d 0
+              face_flux_wts(k) = 0. _d 0
              enddo
 
              DO k=1,2
@@ -160,24 +157,14 @@ C     === Global variables ===
                  if (iter_count .gt. 0) then
                    href = href + H_streamice(i+2*k-3,j,bi,bj)
                  else
-                   IF ((k*2.-3.)*hflux_x_SI(i-1+k,j,bi,bj).lt.0.) THEN
-                    href = href + H_streamice(i+2*k-3,j,bi,bj) * 
+                   href = href + H_streamice(i+2*k-3,j,bi,bj) * 
      &                ABS(hflux_x_SI_v(i-1+k,j,bi,bj)) * 
      &                dyG(i-1+k,j,bi,bj)
-                    tot_adv_flux = tot_adv_flux + 
+                   tot_adv_flux = tot_adv_flux + 
      &                ABS(hflux_x_SI_v(i-1+k,j,bi,bj)) *
      &                dyG(i-1+k,j,bi,bj)
-                    face_adv_flux_wts(k) = 
-     &                ABS(hflux_x_SI_v(i-1+k,j,bi,bj)) *
+                   face_flux_wts(k) = ABS(hflux_x_SI_v(i-1+k,j,bi,bj)) *
      &                dyG(i-1+k,j,bi,bj)
-                   ELSEIF ((k*2.-3.)*hflux_x_SI(i-1+k,j,bi,bj).gt.0.) THEN
-                    face_neg_flux_wts(k) = 
-     &                ABS(hflux_x_SI(i-1+k,j,bi,bj)) *
-     &                dyG(i-1+k,j,bi,bj)
-                    tot_neg_flux = tot_neg_flux + 
-     &                ABS(hflux_x_SI(i-1+k,j,bi,bj)) *
-     &                dyG(i-1+k,j,bi,bj)
-                   ENDIF
                  endif
                  tot_flux = tot_flux + hflux_x_SI(i-1+k,j,bi,bj) *
      &            (3.0 - 2.0 * k) *   
@@ -190,24 +177,14 @@ C     === Global variables ===
                  if (iter_count .gt. 0) then
                    href = href + H_streamice(i,j+2*k-3,bi,bj)
                  else
-                   IF ((k*2.-3.)*hflux_y_SI(i,j-1+k,bi,bj).lt.0.) THEN
-                    href = href + H_streamice(i,j+2*k-3,bi,bj) * 
+                   href = href + H_streamice(i,j+2*k-3,bi,bj) * 
      &                ABS(hflux_y_SI_v(i,j-1+k,bi,bj)) * 
      &                dxG(i,j-1+k,bi,bj)
-                    tot_adv_flux = tot_adv_flux + 
+                   tot_adv_flux = tot_adv_flux + 
      &                ABS(hflux_y_SI_v(i,j-1+k,bi,bj)) *
      &                dxG(i,j-1+k,bi,bj)
-                    face_adv_flux_wts(k+2)=
-     &                ABS(hflux_y_SI_v(i,j-1+k,bi,bj)) *
+                   face_flux_wts(k+2)=ABS(hflux_y_SI_v(i,j-1+k,bi,bj)) *
      &                dxG(i,j-1+k,bi,bj)
-                   ELSEIF ((k*2.-3.)*hflux_y_SI(i,j-1+k,bi,bj).gt.0.) THEN
-                    face_neg_flux_wts(k+2) = 
-     &                ABS(hflux_y_SI(i,j-1+k,bi,bj)) *
-     &                dxG(i,j-1+k,bi,bj)
-                    tot_neg_flux = tot_neg_flux + 
-     &                ABS(hflux_y_SI(i,j-1+k,bi,bj)) *
-     &                dxG(i,j-1+k,bi,bj)
-                   ENDIF
                  endif
                  tot_flux = tot_flux + hflux_y_SI(i,j-1+k,bi,bj) *
      &            (3.0 - 2.0 * k) *   
@@ -217,7 +194,7 @@ C     === Global variables ===
              ENDDO
 
              DO k=1,4
-               IF (face_adv_flux_wts(k).lt.0.0) THEN
+               IF (face_flux_wts(k).lt.0.0) THEN
                  WRITE(msgBuf,'(A,I5,I5)') 
      &             'ADV FRONT: FACE ADV FLUX NEGATIVE',i,j
                  CALL PRINT_ERROR(msgBuf, myThid)
@@ -228,9 +205,7 @@ C     === Global variables ===
 
                IF (iter_count .eq. 0 .and. tot_adv_flux .gt. 0) THEN
                  href = href / tot_adv_flux
-               ELSEIF (iter_count .eq. 0) THEN
-                 href = H_streamice (i,j,bi,bj)
-               ELSE
+               ELSE 
                  href = href / n_flux_1
                ENDIF
 
@@ -252,11 +227,12 @@ C     === Global variables ===
                  area_shelf_streamice(i,j,bi,bj) = 0.0
                 
                  DO k=1,2
-                   IF (face_neg_flux_wts(k).gt.0.0) THEN
+
+                   IF (face_flux_wts(k).gt.0.0) THEN
    
                      cell_vol = area_shelf_streamice(i+2*k-3,j,bi,bj) * 
      &                          H_streamice(i+2*k-3,j,bi,bj)
-                     vol_budget = face_neg_flux_wts(k)/tot_neg_flux *
+                     vol_budget = face_flux_wts(k)/tot_adv_flux *
      &                          partial_vol
        
                      IF (cell_vol + vol_budget .lt. 0.0) THEN
@@ -281,11 +257,11 @@ C     === Global variables ===
  
                    ENDIF
 
-                   IF (face_neg_flux_wts(k+2).gt.0.0) THEN
+                   IF (face_flux_wts(k+2).gt.0.0) THEN
    
                      cell_vol = area_shelf_streamice(i,j+2*k-3,bi,bj) * 
      &                          H_streamice(i,j+2*k-3,bi,bj)
-                     vol_budget = face_neg_flux_wts(k+2)/tot_neg_flux *
+                     vol_budget = face_flux_wts(k+2)/tot_adv_flux *
      &                          partial_vol
 
                      IF (cell_vol + vol_budget .lt. 0.0) THEN
@@ -322,8 +298,7 @@ C     === Global variables ===
                ELSEIF (hpot .lt. href .and. grow_cell) THEN ! cell still unfilled
 
                  hmask_new (i,j,bi,bj) = 2.0
-                 area_shelf_streamice (i,j,bi,bj) = partial_vol /
-     &              H_streamice (i,j,bi,bj)
+                 area_shelf_streamice (i,j,bi,bj) = partial_vol / href
                  H_streamice (i,j,bi,bj) = href
 
                ELSEIF (grow_cell) THEN ! cell is filled - do overflow
@@ -403,7 +378,6 @@ c
 c
       ENDIF
       ENDDO
-      
 
       DO bj=myByLo(myThid),myByHi(myThid)
        DO bi=myBxLo(myThid),myBxHi(myThid)
