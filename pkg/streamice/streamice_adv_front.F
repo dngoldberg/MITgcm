@@ -232,7 +232,9 @@ C     === Global variables ===
    
                      cell_vol = area_shelf_streamice(i+2*k-3,j,bi,bj) * 
      &                          H_streamice(i+2*k-3,j,bi,bj)
-                     vol_budget = face_flux_wts(k)/tot_adv_flux *
+!                     vol_budget = face_flux_wts(k)/tot_adv_flux *
+!     &                          partial_vol
+                     vol_budget = 1.0 / n_flux_1 *
      &                          partial_vol
        
                      IF (cell_vol + vol_budget .lt. 0.0) THEN
@@ -261,7 +263,9 @@ C     === Global variables ===
    
                      cell_vol = area_shelf_streamice(i,j+2*k-3,bi,bj) * 
      &                          H_streamice(i,j+2*k-3,bi,bj)
-                     vol_budget = face_flux_wts(k+2)/tot_adv_flux *
+!                     vol_budget = face_flux_wts(k+2)/tot_adv_flux *
+!     &                          partial_vol
+                     vol_budget = 1.0 / n_flux_1 *
      &                          partial_vol
 
                      IF (cell_vol + vol_budget .lt. 0.0) THEN
