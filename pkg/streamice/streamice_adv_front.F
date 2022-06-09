@@ -46,26 +46,10 @@ C     === Global variables ===
       INTEGER Gi, Gj
       INTEGER new_partial(4), face_neg_flux(4), face_pos_flux(4)
 
-<<<<<<< HEAD
-=======
-! ordering:
-!        
-!     _4_
-!   1|___|2 
-!      3
-!
-!	  
-      INTEGER new_partial(4)
-      _RL face_flux_wts(4)
-      _RL face_thick_wts(4)  
-      
       _RL iter_flag
       _RL n_flux_1, n_flux_2, n_neg_flux, n_pos_flux
       _RL href, rho, partial_vol, tot_flux, hpot
       _RL face_flux, cell_vol, vol_budget
-      _RL tot_adv_flux, vol_budget, cell_vol
-      LOGICAL grow_cell
-  
       CHARACTER*(MAX_LEN_MBUF) msgBuf
       _RL hflux_x_SI (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL hflux_y_SI (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
@@ -186,61 +170,6 @@ C     === Global variables ===
                  face_neg_flux(k+3) = 1
                 ENDIF
                 hflux_y_SI(i,j+k,bi,bj) = 0. _d 0
-             n_flux_1 = 0. _d 0
-             href = 0. _d 0
-             tot_flux = 0. _d 0
-             tot_adv_flux = 0. _d 0
-             do k=1,4
-              face_flux_wts(k) = 0. _d 0
-             enddo
-
-             DO k=1,2
-               IF (hflux_x_SI(i-1+k,j,bi,bj).ne. 0. _d 0) THEN
-                 n_flux_1 = n_flux_1 + 1. _d 0
-                 if (iter_count .gt. 0) then
-                   href = href + H_streamice(i+2*k-3,j,bi,bj)
-                 else
-                   href = href + H_streamice(i+2*k-3,j,bi,bj) * 
-     &                ABS(hflux_x_SI_v(i-1+k,j,bi,bj)) * 
-     &                dyG(i-1+k,j,bi,bj)
-                   tot_adv_flux = tot_adv_flux + 
-     &                ABS(hflux_x_SI_v(i-1+k,j,bi,bj)) *
-     &                dyG(i-1+k,j,bi,bj)
-                   face_flux_wts(k) = ABS(hflux_x_SI_v(i-1+k,j,bi,bj)) *
-     &                dyG(i-1+k,j,bi,bj)
-                 endif
-                 tot_flux = tot_flux + hflux_x_SI(i-1+k,j,bi,bj) *
-     &            (3.0 - 2.0 * k) *   
-     &            dyG(i-1+k,j,bi,bj) * time_step
-                 hflux_x_SI(i-1+k,j,bi,bj) = 0. _d 0
-               ENDIF
-   
-               IF (hflux_y_SI(i,j-1+k,bi,bj).ne. 0. _d 0) THEN
-                 n_flux_1 = n_flux_1 + 1. _d 0
-                 if (iter_count .gt. 0) then
-                   href = href + H_streamice(i,j+2*k-3,bi,bj)
-                 else
-                   href = href + H_streamice(i,j+2*k-3,bi,bj) * 
-     &                ABS(hflux_y_SI_v(i,j-1+k,bi,bj)) * 
-     &                dxG(i,j-1+k,bi,bj)
-                   tot_adv_flux = tot_adv_flux + 
-     &                ABS(hflux_y_SI_v(i,j-1+k,bi,bj)) *
-     &                dxG(i,j-1+k,bi,bj)
-                   face_flux_wts(k+2)=ABS(hflux_y_SI_v(i,j-1+k,bi,bj)) *
-     &                dxG(i,j-1+k,bi,bj)
-                 endif
-                 tot_flux = tot_flux + hflux_y_SI(i,j-1+k,bi,bj) *
-     &            (3.0 - 2.0 * k) *   
-     &            dxG(i,j-1+k,bi,bj) * time_step
-                 hflux_y_SI(i,j-1+k,bi,bj) = 0. _d 0
-               ENDIF
-             ENDDO
-
-             DO k=1,4
-               IF (face_flux_wts(k).lt.0.0) THEN
-                 WRITE(msgBuf,'(A,I5,I5)') 
-     &             'ADV FRONT: FACE ADV FLUX NEGATIVE',i,j
-                 CALL PRINT_ERROR(msgBuf, myThid)
                ENDIF
               ENDDO 
 
@@ -250,10 +179,6 @@ C     === Global variables ===
                  href = href / n_pos_flux
                ELSE
                  href = H_streamice(i,j,bi,bj)
-               IF (iter_count .eq. 0 .and. tot_adv_flux .gt. 0) THEN
-                 href = href / tot_adv_flux
-               ELSE 
-                 href = href / n_flux_1
                ENDIF
                
                partial_vol = H_streamice (i,j,bi,bj) *
@@ -306,20 +231,6 @@ C     === Global variables ===
                    IF (cell_vol + vol_budget .lt. 0.0) THEN
 
                      WRITE(msgBuf,'(A,E15.7)') 'RETREAT PAST CELL',
-                 DO k=1,2
-
-                   IF (face_flux_wts(k).gt.0.0) THEN
-   
-                     cell_vol = area_shelf_streamice(i+2*k-3,j,bi,bj) * 
-     &                          H_streamice(i+2*k-3,j,bi,bj)
-!                     vol_budget = face_flux_wts(k)/tot_adv_flux *
-!     &                          partial_vol
-                     vol_budget = 1.0 / n_flux_1 *
-     &                          partial_vol
-       
-                     IF (cell_vol + vol_budget .lt. 0.0) THEN
-
-                       WRITE(msgBuf,'(A,E15.7)') 'RETREAT PAST CELL',
      &                       cell_vol + vol_budget
                      CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
      &                    SQUEEZE_RIGHT , 1)
@@ -334,14 +245,6 @@ C     === Global variables ===
                      hmask_new(i+2*k-1,j,bi,bj) = 2.0
                      area_shelf_streamice(i+2*k-1,j,bi,bj) = 
      &                   cell_vol / H_streamice(i+2*k-1,j,bi,bj)
-                   IF (face_flux_wts(k+2).gt.0.0) THEN
-   
-                     cell_vol = area_shelf_streamice(i,j+2*k-3,bi,bj) * 
-     &                          H_streamice(i,j+2*k-3,bi,bj)
-!                     vol_budget = face_flux_wts(k+2)/tot_adv_flux *
-!     &                          partial_vol
-                     vol_budget = 1.0 / n_flux_1 *
-     &                          partial_vol
 
                    ENDIF
 
@@ -365,31 +268,6 @@ C     === Global variables ===
                      H_streamice(i,j+2*k-1,bi,bj) = 0.0
   
                    ELSE
-                     ELSE
-
-                       cell_vol = cell_vol + vol_budget
-                       hmask_new(i,j+2*k-3,bi,bj) = 2.0
-                       area_shelf_streamice(i,j+2*k-3,bi,bj) = 
-     &                   cell_vol / H_streamice(i,j+2*k-3,bi,bj)
- 
-                     ENDIF
- 
-                   ENDIF
-   
-                 ENDDO
- 
-               ELSEIF (hpot .eq. href .and. grow_cell) THEN ! cell is exactly covered, no overflow
-              
-                 hmask_new (i,j,bi,bj) = 1.0
-                 H_streamice (i,j,bi,bj) = href
-                 area_shelf_streamice(i,j,bi,bj) =
-     &            rA(i,j,bi,bj)
-
-               ELSEIF (hpot .lt. href .and. grow_cell) THEN ! cell still unfilled
-
-                 hmask_new (i,j,bi,bj) = 2.0
-                 area_shelf_streamice (i,j,bi,bj) = partial_vol / href
-                 H_streamice (i,j,bi,bj) = href
 
                      cell_vol = cell_vol + vol_budget
                      hmask_new(i,j+2*k-1,bi,bj) = 2.0
@@ -496,6 +374,7 @@ c
 c
       ENDIF
       ENDDO
+      
       DO bj=myByLo(myThid),myByHi(myThid)
        DO bi=myBxLo(myThid),myBxHi(myThid)
         DO j=1-1,sNy+1
