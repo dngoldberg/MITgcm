@@ -51,6 +51,10 @@ C     LOCAL VARIABLES
       EXTERNAL ETA_GL_STREAMICE
 #endif
 #ifdef ALLOW_AUTODIFF_TAMC
+#ifdef ALLOW_AUTODIFF_TAMC
+      INTEGER act1, act2, act3, act4
+      INTEGER max1, max2, max3
+#endif
       INTEGER ikey_1
 #endif
       _RL STREAMICE_BSTRESS_EXP
@@ -262,12 +266,6 @@ CADJ &     = comlev1_stream_hybrid, key=ikey_1
      &        / streamice_density * R_low_si(i,j,bi,bj))
 
            effective_stress = streamice_density * gravity *
-c     &      ETA_GL_STREAMICE (
-c     &       H_streamice(i,j,bi,bj)-hf,
-c     &       0. _d 0,
-c     &       1. _d 0,
-c     &       0. _d 0,
-c     &       streamice_smooth_gl_width)
      &      (H_streamice(i,j,bi,bj)-hf)
            effective_stress= max(0.0, effective_stress)
            fb = C_fric_val *

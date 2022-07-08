@@ -5,6 +5,9 @@
 #ifdef ALLOW_ECCO
 # include "ECCO_OPTIONS.h"
 #endif
+#ifdef ALLOW_GMREDI
+# include "GMREDI_OPTIONS.h"
+#endif
 
       subroutine ctrl_map_ini_ecco( mythid )
 
@@ -50,6 +53,9 @@ c     == global variables ==
 # include "ctrl_dummy.h"
 # include "optim.h"
 #endif
+#ifdef ALLOW_GMREDI
+# include "GMREDI.h"
+#endif
 #ifdef ALLOW_ECCO
 # include "ecco_cost.h"
 #endif
@@ -63,6 +69,7 @@ c     == routine arguments ==
 #ifdef ALLOW_ECCO
 c     == local variables ==
 
+      _RS mask2D(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL     fac
       integer bi,bj
       integer i,j,k
@@ -76,6 +83,8 @@ c     == local variables ==
 
       logical doglobalread
       logical ladinit
+      _RL     tmpfld2d(1-olx:snx+olx,1-oly:sny+oly,   nsx,nsy)
+      _RL     tmpfld3d(1-olx:snx+olx,1-oly:sny+oly,nr,nsx,nsy)
 
       character*( 80) fnamegeneric
       character*(MAX_LEN_FNAM) suff
@@ -182,8 +191,9 @@ c--   initial Eta.
       boundsVec(4)=0.
       boundsVec(5)=0.
       paramSmooth=1
+      CALL CTRL_GET_MASK2D( xx_etan_file, mask2D, myThid )
       call ctrl_map_ini_gen2D(xx_etan_file, 'wetan',
-     & xx_etan_dummy, boundsVec, etan, maskc, paramSmooth,
+     & xx_etan_dummy, boundsVec, etan, mask2D, paramSmooth,
      & mythid )
       _EXCH_XY_RL( etan, mythid)
 #endif
@@ -196,9 +206,10 @@ c--   SST relaxation coefficient.
       boundsVec(4)=0.
       boundsVec(5)=0.
       paramSmooth=1
+      CALL CTRL_GET_MASK2D( xx_relaxsst_file, mask2D, myThid )
       call ctrl_map_ini_gen2D(xx_relaxsst_file, 'wrelaxsst',
      & xx_relaxsst_dummy, boundsVec,
-     & lambdaThetaClimRelax, maskc, paramSmooth, mythid )
+     & lambdaThetaClimRelax, mask2D, paramSmooth, mythid )
       _EXCH_XY_RS( lambdaThetaClimRelax, mythid)
 #endif
 
@@ -210,9 +221,10 @@ c--   SSS relaxation coefficient.
       boundsVec(4)=0.
       boundsVec(5)=0.
       paramSmooth=1
+      CALL CTRL_GET_MASK2D( xx_relaxsss_file, mask2D, myThid )
       call ctrl_map_ini_gen2D(xx_relaxsss_file, 'wrelaxsss',
      & xx_relaxsss_dummy, boundsVec,
-     & lambdaSaltClimRelax, maskc, paramSmooth, mythid )
+     & lambdaSaltClimRelax, mask2D, paramSmooth, mythid )
       _EXCH_XY_RS( lambdaSaltClimRelax, mythid)
 #endif
 
@@ -223,8 +235,9 @@ c--   SSS relaxation coefficient.
       boundsVec(4)=1. _d -2
       boundsVec(5)=0.
       paramSmooth=1
+      CALL CTRL_GET_MASK2D( xx_bottomdrag_file, mask2D, myThid )
       call ctrl_map_ini_gen2D(xx_bottomdrag_file, 'wbottomdrag',
-     & xx_bottomdrag_dummy, boundsVec, bottomDragFld, maskc,
+     & xx_bottomdrag_dummy, boundsVec, bottomDragFld, mask2D,
      & paramSmooth, mythid )
       _EXCH_XY_RL( bottomDragFld, mythid)
 #endif
@@ -262,6 +275,7 @@ c-- exchange UV:
 #endif
 
 #ifdef ALLOW_KAPGM_CONTROL
+#ifdef GM_READ_K3D_GM
       boundsVec(1)=1. _d 2
       boundsVec(2)=2. _d 2
       boundsVec(3)=0.9 _d 4
@@ -269,12 +283,14 @@ c-- exchange UV:
       boundsVec(5)=0.
       paramSmooth=1
       call ctrl_map_ini_gen3D(xx_kapgm_file, 'wkapgmFld',
-     & xx_kapgm_dummy, boundsVec, kapGM, maskC, paramSmooth,
+     & xx_kapgm_dummy, boundsVec, GM_inpK3dGM, maskC, paramSmooth,
      & mythid )
-      _EXCH_XYZ_RL( kapGM, mythid )
+      _EXCH_XYZ_RL( GM_inpK3dGM, mythid )
+#endif
 #endif
 
 #ifdef ALLOW_KAPREDI_CONTROL
+#ifdef GM_READ_K3D_REDI
       boundsVec(1)=1. _d 2
       boundsVec(2)=2. _d 2
       boundsVec(3)=0.9 _d 4
@@ -282,9 +298,10 @@ c-- exchange UV:
       boundsVec(5)=0.
       paramSmooth=1
       call ctrl_map_ini_gen3D(xx_kapredi_file, 'wkaprediFld',
-     & xx_kapredi_dummy, boundsVec, kapRedi, maskC, paramSmooth,
+     & xx_kapredi_dummy, boundsVec, GM_inpK3dRedi, maskC, paramSmooth,
      & mythid )
-      _EXCH_XYZ_RL( kapRedi, mythid )
+      _EXCH_XYZ_RL( GM_inpK3dRedi, mythid )
+#endif
 #endif
 
 #ifdef ALLOW_GENTIM2D_CONTROL

@@ -77,7 +77,9 @@ C     gV_dpy       :: implicit part of pressure gradient tendency
 #endif
 #ifdef ALLOW_DIAGNOSTICS
       LOGICAL dPhiDiagIsOn, implDisDiagIsOn
+# ifdef ALLOW_SOLVE4_PS_AND_DRAG
       _RL tmpFac
+# endif
 #endif /* ALLOW_DIAGNOSTICS */
 #ifdef ALLOW_PRESSURE_RELEASE_CODE
 #ifdef ALLOW_DAMP_THINCOLUMN

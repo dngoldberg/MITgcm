@@ -26,6 +26,10 @@ C   are specific to this package are assumed to be set in ECCO_CPPOPTIONS.h
 C   ==================================================================
 C-- Package-specific Options & Macros go here
 
+C  o  Re-activate deprecated codes in pkg/ecco & pkg/ctrl (but not recommended)
+C     and since pkg/ctrl can be used without pkg/ecco, better to have it here
+#undef ECCO_CTRL_DEPRECATED
+
 #undef EXCLUDE_CTRL_PACK
 #undef ALLOW_NONDIMENSIONAL_CONTROL_IO
 
@@ -62,10 +66,6 @@ C       >>> Other Control.
 #undef ALLOW_KAPGM_CONTROL
 #undef ALLOW_KAPREDI_CONTROL
 #undef ALLOW_BOTTOMDRAG_CONTROL
-
-C       >>> Backward compatibility option (before checkpoint 65p)
-#undef ALLOW_KAPGM_CONTROL_OLD
-#undef ALLOW_KAPREDI_CONTROL_OLD
 
 C       >>> Generic Control.
 #undef ALLOW_GENARR2D_CONTROL

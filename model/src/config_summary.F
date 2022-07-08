@@ -112,7 +112,7 @@ C     i, k   :: Loop counters.
       CALL WRITE_1D_RL( tRef, Nr, INDEX_K, 'tRef =',
      & '   /* Reference temperature profile ( oC or K ) */')
       CALL WRITE_1D_RL( sRef, Nr, INDEX_K, 'sRef =',
-     & '   /* Reference salinity profile ( psu ) */')
+     & '   /* Reference salinity profile ( g/kg ) */')
 C-    Horizontal viscosity parameters:
 #ifdef ALLOW_MOM_COMMON
       CALL WRITE_0D_L( useStrainTensionVisc, INDEX_NONE,
@@ -129,6 +129,10 @@ C-    Horizontal viscosity parameters:
       IF ( useSmag3D )
      & CALL WRITE_0D_RL( smag3D_coeff, INDEX_NONE, 'smag3D_coeff =',
      & ' /* Smagorinsky 3-D coefficient (Cs^2) (-) */')
+      IF ( smag3D_diffCoeff.GT.zeroRL )
+     & CALL WRITE_0D_RL( smag3D_diffCoeff, INDEX_NONE,
+     & 'smag3D_diffCoeff =',
+     & ' /* Smagorinsky 3-D diffusion coefficient (-) */')
       CALL WRITE_0D_RL( viscAh, INDEX_NONE, 'viscAh  =  ',
      & ' /* Lateral harmonic viscosity ( m^2/s ) */')
       IF ( viscAhD.NE.viscAh )
@@ -250,11 +254,10 @@ C-----
         CALL WRITE_0D_RL( tAlpha,  INDEX_NONE,'tAlpha =',
      &  ' /* Linear EOS thermal expansion coefficient ( 1/oC ) */')
         CALL WRITE_0D_RL( sBeta,   INDEX_NONE,'sBeta  =',
-     &  ' /* Linear EOS haline contraction coefficient ( 1/psu ) */')
+     & ' /* Linear EOS haline contraction coefficient ( 1/(g/kg) ) */')
         CALL WRITE_0D_RL( rhoNil,  INDEX_NONE, 'rhoNil    =',
      &  ' /* Reference density for Linear EOS ( kg/m^3 ) */')
-      ENDIF
-      IF ( eosType .EQ. 'POLY3 ' ) THEN
+      ELSEIF ( eosType .EQ. 'POLY3 ' ) THEN
         WRITE(msgBuf,'(A)')
      &   'Polynomial EQS parameters ( from POLY3.COEFFS ):'
         CALL PRINT_MESSAGE( msgBuf, ioUnit, SQUEEZE_RIGHT, myThid )
@@ -265,6 +268,9 @@ C-----
         ENDDO
         WRITE(msgBuf,'(A)') '    ;'
         CALL PRINT_MESSAGE( msgBuf, ioUnit, SQUEEZE_RIGHT, myThid )
+      ELSEIF ( eosType .NE. 'IDEALG' ) THEN
+        CALL WRITE_0D_RL( eosRefP0, INDEX_NONE, 'eosRefP0 =',
+     &  ' /* Reference atmospheric pressure for EOS ( Pa ) */')
       ENDIF
       IF ( usingZCoords ) THEN
        WRITE(msgBuf,'(2A)') 'selectP_inEOS_Zc =',
@@ -279,6 +285,8 @@ C-----
        CALL PRINT_MESSAGE(endList, ioUnit, SQUEEZE_RIGHT, myThid )
       ENDIF
 C-----
+      CALL WRITE_0D_RL( surf_pRef, INDEX_NONE, 'surf_pRef =',
+     &  ' /* Surface reference pressure ( Pa ) */')
       IF ( fluidIsWater ) THEN
        CALL WRITE_0D_RL( HeatCapacity_Cp, INDEX_NONE,
      &   'HeatCapacity_Cp =',
@@ -340,26 +348,28 @@ C-----
      &'   /* Implicit free surface factor */')
       CALL WRITE_0D_RL( implicSurfPress, INDEX_NONE,
      & 'implicSurfPress =',
-     & '  /* Surface Pressure implicit factor (0-1)*/')
+     & '  /* Surface Pressure implicit factor (0-1) */')
       CALL WRITE_0D_RL( implicDiv2DFlow, INDEX_NONE,
      & 'implicDiv2DFlow =',
-     & '  /* Barot. Flow Div. implicit factor (0-1)*/')
+     & '  /* Barot. Flow Div. implicit factor (0-1) */')
       CALL WRITE_0D_L( uniformLin_PhiSurf, INDEX_NONE,
      & 'uniformLin_PhiSurf =',
-     &  ' /* use uniform Bo_surf on/off flag*/')
+     & ' /* use uniform Bo_surf on/off flag */')
       CALL WRITE_0D_L( uniformFreeSurfLev, INDEX_NONE,
      & 'uniformFreeSurfLev =',
-     &  ' /* free-surface level-index is uniform */')
+     & ' /* free-surface level-index is uniform */')
+      CALL WRITE_0D_RL( sIceLoadFac, INDEX_NONE, 'sIceLoadFac =',
+     & '  /* scale factor for sIceLoad (0-1) */')
       CALL WRITE_0D_RL( hFacMin, INDEX_NONE, 'hFacMin = ',
      & '  /* minimum partial cell factor (hFac) */')
       CALL WRITE_0D_RL( hFacMinDr, INDEX_NONE, 'hFacMinDr =',
      &  ' /* minimum partial cell thickness ('//rUnits//') */')
       CALL WRITE_0D_L( exactConserv, INDEX_NONE,
      & 'exactConserv =',
-     & '  /* Exact Volume Conservation on/off flag*/')
+     & '  /* Exact Volume Conservation on/off flag */')
       CALL WRITE_0D_L( linFSConserveTr, INDEX_NONE,
      & 'linFSConserveTr =',
-     &  ' /* Tracer correction for Lin Free Surface on/off flag*/')
+     &  ' /* Tracer correction for Lin Free Surface on/off flag */')
       WRITE(msgBuf,'(2A)') 'nonlinFreeSurf =',
      &  ' /* Non-linear Free Surf. options (-1,0,1,2,3)*/'
       CALL PRINT_MESSAGE( msgBuf, ioUnit, SQUEEZE_RIGHT, myThid )
@@ -385,7 +395,7 @@ C-----
      &  ' /* Temp. of Evap/Prec/R (UNSET=use local T)(oC)*/')
       CALL WRITE_0D_RL( salt_EvPrRn, INDEX_NONE,
      &  'salt_EvPrRn =',
-     &  ' /* Salin. of Evap/Prec/R (UNSET=use local S)(psu)*/')
+     &  ' /* Salin. of Evap/Prec/R (UNSET=use local S)(g/kg)*/')
       CALL WRITE_0D_I( selectAddFluid, INDEX_NONE,
      & 'selectAddFluid =',
      &  ' /* option for mass source/sink of fluid (=0: off) */')
@@ -394,12 +404,12 @@ C-----
      &  ' /* Temp. of addMass array (UNSET=use local T)(oC)*/')
       CALL WRITE_0D_RL( salt_addMass, INDEX_NONE,
      & 'salt_addMass =',
-     &  ' /* Salin. of addMass array (UNSET=use local S)(psu)*/')
+     &  ' /* Salin. of addMass array (UNSET=use local S)(g/kg)*/')
       IF ( .NOT.useRealFreshWaterFlux .OR. selectAddFluid.EQ.-1
      &                                .OR. nonlinFreeSurf.LE.0 ) THEN
       CALL WRITE_0D_RL( convertFW2Salt, INDEX_NONE,
      & 'convertFW2Salt =',
-     & ' /* convert F.W. Flux to Salt Flux (-1=use local S)(psu)*/')
+     & ' /* convert F.W. Flux to Salt Flux (-1=use local S)(g/kg)*/')
       ENDIF
 
       CALL WRITE_0D_L( use3Dsolver, INDEX_NONE,
@@ -590,8 +600,9 @@ C---  report of some vector-invariant parameters ends here
       CALL WRITE_0D_L( saltForcing,  INDEX_NONE,
      & 'saltForcing  =', '  /* Salinity forcing on/off flag */')
 #ifdef ALLOW_BALANCE_FLUXES
-      CALL WRITE_0D_L( balanceEmPmR, INDEX_NONE, 'balanceEmPmR =',
-     &             '  /* balance net fresh-water flux on/off flag */')
+      CALL WRITE_0D_I( selectBalanceEmPmR, INDEX_NONE,
+     &                'selectBalanceEmPmR =',
+     &                ' /* balancing glob.mean EmPmR selector */' )
 #endif
       CALL WRITE_0D_L( doSaltClimRelax, INDEX_NONE,
      & 'doSaltClimRelax =', ' /* apply SSS relaxation on/off flag */')
@@ -608,8 +619,8 @@ C---  report of some vector-invariant parameters ends here
      &  ' /* Precision used for writing binary files */')
 #ifdef ALLOW_BALANCE_FLUXES
       CALL WRITE_0D_L( balancePrintMean, INDEX_NONE,
-     &                 'balancePrintMean  =',
-     &  '  /* print means for balancing fluxes */')
+     &                'balancePrintMean =',
+     &                ' /* print means for balancing fluxes */')
 #endif
 C---
 c     CALL WRITE_0D_I(rwSuffixType, INDEX_NONE, 'rwSuffixType =',
@@ -671,8 +682,8 @@ C---
       CALL PRINT_MESSAGE( msgBuf, ioUnit, SQUEEZE_RIGHT, myThid )
       CALL WRITE_0D_I( cg2dMaxIters,   INDEX_NONE,'cg2dMaxIters =',
      &'   /* Upper limit on 2d con. grad iterations  */')
-      CALL WRITE_0D_I( cg2dChkResFreq, INDEX_NONE,'cg2dChkResFreq =',
-     &'   /* 2d con. grad convergence test frequency */')
+      CALL WRITE_0D_I( cg2dMinItersNSA, INDEX_NONE,'cg2dMinItersNSA =',
+     &'   /* Minimum number of iterations of 2d con. grad solver  */')
       CALL WRITE_0D_I( cg2dUseMinResSol, INDEX_NONE,
      &  'cg2dUseMinResSol=',
      &  ' /* use cg2d last-iter(=0) / min-resid.(=1) solution */')
@@ -686,6 +697,8 @@ C---
      &'   /* Freq. for updating cg2d preconditioner */')
       CALL WRITE_0D_L( useSRCGSolver, INDEX_NONE,
      & 'useSRCGSolver =', '  /* use single reduction CG solver(s) */')
+      CALL WRITE_0D_L( useNSACGSolver, INDEX_NONE,
+     & 'useNSACGSolver =', '  /* use not-self-adjoint CG solver */')
       CALL WRITE_0D_I( printResidualFreq, INDEX_NONE,
      & 'printResidualFreq =', ' /* Freq. for printing CG residual */')
 

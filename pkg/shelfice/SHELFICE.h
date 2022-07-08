@@ -36,15 +36,18 @@ C     SHI_withBL_uStarTopDz    :: with SHELFICEboundaryLayer, compute uStar from
 C                                 uVel,vVel avergaged over top Dz thickness;
 C                                 def: F
 C     SHELFICEadvDiffHeatFlux  :: use advective-diffusive heat flux into the
-C                                 ice shelf instead of default diffusive heat
+C                                 shelf instead of default diffusive heat
 C                                 flux, see Holland and Jenkins (1999),
 C                                 eq.21,22,26,31; def: F
+C     SHELFICEsaltToHeatRatio  :: constant ratio giving
+C                                 SHELFICEsaltTransCoeff/SHELFICEheatTransCoeff
+C                                 (def: 5.05e-3)
 C     SHELFICEheatTransCoeff   :: constant heat transfer coefficient that
 C                                 determines heat flux into shelfice
 C                                 (def: 1e-4 m/s)
 C     SHELFICEsaltTransCoeff   :: constant salinity transfer coefficient that
 C                                 determines salt flux into shelfice
-C                                 (def: 5.05e-3 * 1e-4 m/s)
+C                                 (def: SHELFICEsaltToHeatRatio * SHELFICEheatTransCoeff)
 C     -----------------------------------------------------------------------
 C     SHELFICEuseGammaFrict    :: use velocity dependent exchange coefficients,
 C                                 see Holland and Jenkins (1999), eq.11-18,
@@ -98,13 +101,20 @@ C                               (kg/m^2/s)
 C     shelficeForcingT       :: analogue of surfaceForcingT
 C                               units are  r_unit.Kelvin/s (=Kelvin.m/s if r=z)
 C     shelficeForcingS       :: analogue of surfaceForcingS
-C                               units are  r_unit.psu/s (=psu.m/s if r=z)
+C                               units are  r_unit.g/kg/s (=g/kg.m/s if r=z)
 #ifdef ALLOW_DIAGNOSTICS
 C     shelficeDragU          :: Ice-Shelf stress (for diagnostics), Zonal comp.
 C                               Units are N/m^2 ;   > 0 increase top uVel
 C     shelficeDragV          :: Ice-Shelf stress (for diagnostics), Merid. comp.
 C                               Units are N/m^2 ;   > 0 increase top vVel
 #endif /* ALLOW_DIAGNOSTICS */
+#ifdef ALLOW_CTRL
+C   maskSHI           ::  Mask=1 where ice shelf is present on surface
+C                           layer, showing full 2D ice shelf extent.
+C                           =maskC for rest of k values
+C                           Used with ice shelf fwflx
+C                           or shiTransCoeffT/S ctrl.
+#endif
 C-----------------------------------------------------------------------
 C \ev
 CEOP
@@ -116,6 +126,7 @@ CEOP
 
       COMMON /SHELFICE_PARMS_R/
      &     SHELFICE_dumpFreq, SHELFICE_taveFreq,
+     &     SHELFICEsaltToHeatRatio,
      &     SHELFICEheatTransCoeff, SHELFICEsaltTransCoeff,
      &     rhoShelfice, SHELFICEkappa,
      &     SHELFICElatentHeat,
@@ -131,6 +142,7 @@ CEOP
      &     SHELFICEdepthMinMelt
 
       _RL SHELFICE_dumpFreq, SHELFICE_taveFreq
+      _RL SHELFICEsaltToHeatRatio
       _RL SHELFICEheatTransCoeff
       _RL SHELFICEsaltTransCoeff
       _RL SHELFICElatentHeat
@@ -153,7 +165,8 @@ CEOP
      &     shelficeMass, shelficeMassInit,
      &     shelficeLoadAnomaly,
      &     shelficeForcingT, shelficeForcingS,
-     &     shiTransCoeffT, shiTransCoeffS
+     &     shiTransCoeffT, shiTransCoeffS,
+     &     shiCDragFld, shiDragQuadFld
 #ifdef ALLOW_SHELFICE_GROUNDED_ICE
      &     , phiHydC_m, grdFactor
 #endif	 
@@ -176,6 +189,8 @@ CEOP
        _RL mass_shelfice0       (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
        _RL mass_shelfice1       (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
 #endif
+      _RL shiCDragFld           (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RL shiDragQuadFld        (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
 
       COMMON /SHELFICE_FIELDS_RS/
      &     R_shelfIce,
@@ -194,10 +209,10 @@ CEOP
       _RS R_MWCT                (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
 #endif
 
-#ifdef ALLOW_SHIFWFLX_CONTROL
+#ifdef ALLOW_CTRL
       COMMON /SHELFICE_MASKS_CTRL/ maskSHI
       _RS maskSHI  (1-OLx:sNx+OLx,1-OLy:sNy+OLy,Nr,nSx,nSy)
-#endif /* ALLOW_SHIFWFLX_CONTROL */
+#endif /* ALLOW_CTRL */
 
 #ifdef ALLOW_DIAGNOSTICS
       COMMON /SHELFICE_DIAG_DRAG/ shelficeDragU, shelficeDragV
