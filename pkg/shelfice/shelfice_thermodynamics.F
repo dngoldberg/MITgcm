@@ -131,6 +131,7 @@ C     drKp1, recip_drLoc
       _RL effMass  (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL mass, shA, FACTOR1, FACTOR2
       LOGICAL massmin_truedens_temp
+#endif
 #ifdef ALLOW_AUTODIFF_TAMC
 # ifdef SHI_ALLOW_GAMMAFRICT
       INTEGER act1, act2, act3, act4

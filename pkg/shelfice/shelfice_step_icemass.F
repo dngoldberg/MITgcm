@@ -99,6 +99,8 @@ C--    quick fix to prevent ice-shelf mass to become negative
             ENDDO
            ENDDO
 
+         ENDDO
+        ENDDO
        ENDIF
 
        _EXCH_XY_RL( shelficeMass, myThid )
