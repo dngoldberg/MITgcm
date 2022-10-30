@@ -6,7 +6,7 @@
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 
 CBOP
-      SUBROUTINE STREAMICE_ADVECT_THICKNESS ( myThid,myIter,time_step )
+      SUBROUTINE STREAMICE_ADVECT_CREVASSE ( myThid,myIter,time_step )
 
 C     *============================================================*
 C     | SUBROUTINE                                                 |
@@ -33,44 +33,36 @@ C     === Global variables ===
       INTEGER myThid, myIter
       _RL time_step
 
-#ifdef ALLOW_STREAMICE
-
+#if (defined(ALLOW_STREAMICE) && defined(STREAMICE_ALLOW_DAMAGE))
       INTEGER i, j, bi, bj, Gi, Gj, k
       _RL thick_bd, uflux, vflux, max_icfl, loc_icfl
       _RL time_step_full, time_step_rem
-      _RL sec_per_year, time_step_loc, MR, SMB, TMB, irho
+      _RL sec_per_year, time_step_loc, MR, SMB
       _RL BCVALX(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL BCVALY(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RS BCMASKX(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RS BCMASKY(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL utrans(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL vtrans(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
-      _RL h_after_uflux_SI(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
-      _RL h_after_vflux_SI(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
-      _RL hflux_x_SI(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
-      _RL hflux_y_SI(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RL d_after_uflux_SI(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RL d_after_vflux_SI(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RL dflux_x_SI(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RL dflux_y_SI(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RL d_bdry_flux_x(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RL d_bdry_flux_y(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
 
       CHARACTER*(MAX_LEN_MBUF) msgBuf
 
-      CALL TIMER_START ('STREAMICE_ADVECT_THICKNESS',myThid)
+      CALL TIMER_START ('STREAMICE_ADVECT_CREVASSE',myThid)
 
       sec_per_year = 365.*86400.
 
       time_step_loc = time_step / sec_per_year
       time_step_full = time_step_loc
       time_step_rem = time_step_loc
-      PRINT *, "time_step_loc ", time_step_loc
 
 #ifdef ALLOW_AUTODIFF_TAMC
 CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
-#endif
-
-#ifdef ALLOW_OPENAD
-      DO k=1,streamice_smooth_thick_adjoint
-      CALL STREAMICE_SMOOTH_ADJOINT_FIELD (
-     O            H_streamice,
-     I            myThid)
-      ENDDO
 #endif
 
       DO bj=myByLo(myThid),myByHi(myThid)
@@ -78,18 +70,21 @@ CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
         DO j=1,sNy+1
          DO i=1,sNx+1
 
-          H_streamice_prev(i,j,bi,bj) =
-     &     H_streamice(i,j,bi,bj)
+          d_prev(i,j,bi,bj) =
+     &     crevasse_depth_advect(i,j,bi,bj)
 
-          hflux_x_SI (i,j,bi,bj) = 0. _d 0
-          hflux_y_SI (i,j,bi,bj) = 0. _d 0
+          d_bdry_flux_x(i,j,bi,bj) = 0. _d 0
+          d_bdry_flux_y(i,j,bi,bj) = 0. _d 0
+
+          dflux_x_SI (i,j,bi,bj) = 0. _d 0
+          dflux_y_SI (i,j,bi,bj) = 0. _d 0
 
           IF (STREAMICE_hmask(i,j,bi,bj).eq.1.0) THEN
-           h_after_uflux_SI(i,j,bi,bj) = 0. _d 0
-           h_after_vflux_SI(i,j,bi,bj) = 0. _d 0
+           d_after_uflux_SI(i,j,bi,bj) = 0. _d 0
+           d_after_vflux_SI(i,j,bi,bj) = 0. _d 0
           ELSE
-           h_after_uflux_SI(i,j,bi,bj) = H_streamice(i,j,bi,bj)
-           h_after_vflux_SI(i,j,bi,bj) = H_streamice(i,j,bi,bj)
+           d_after_uflux_SI(i,j,bi,bj) = d_prev(i,j,bi,bj)
+           d_after_vflux_SI(i,j,bi,bj) = d_prev(i,j,bi,bj)
           ENDIF
 
          ENDDO
@@ -100,8 +95,8 @@ CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
       CALL STREAMICE_ADVECT_SETUP (
      &           myThid,
      &           myIter,
-     &           u_flux_bdry_SI,
-     &           v_flux_bdry_SI,
+     &           d_bdry_flux_x,
+     &           d_bdry_flux_y,
      &           utrans,
      &           vtrans,
      &           BCMASKX,
