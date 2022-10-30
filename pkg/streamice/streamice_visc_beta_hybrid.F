@@ -45,7 +45,7 @@ C     LOCAL VARIABLES
       _RL buttr_param, pwr
 #endif
 #ifdef STREAMICE_COULOMB_SLIDING
-      _RL effective_stress, hf
+      _RL effective_stress
       _RL ETA_GL_STREAMICE
       _RL i_nbasalfric
       EXTERNAL ETA_GL_STREAMICE
@@ -58,7 +58,12 @@ C     LOCAL VARIABLES
       INTEGER ikey_1
 #endif
       _RL STREAMICE_BSTRESS_EXP
-c       _RL total_vol_out
+#ifdef STREAMICE_ALLOW_DAMAGE           
+      _RL S1_princ, adam, bdam, h_ab, d_loc, rhoi, rhow
+#endif
+#if (defined(STREAMICE_ALLOW_DAMAGE) || defined(STREAMICE_ALLOW_DAMAGE))
+      _RL hf
+#endif
       EXTERNAL STREAMICE_BSTRESS_EXP
 
 #ifdef STREAMICE_FLOWLINE_BUTTRESS
@@ -68,6 +73,12 @@ c       _RL total_vol_out
 
 #ifdef STREAMICE_COULOMB_SLIDING
       i_nbasalfric = 1. / n_basal_friction
+#endif
+
+#ifdef STREAMICE_ALLOW_DAMAGE           
+      rhoi = streamice_density
+      rhow = streamice_density_ocean_avg
+      adam = rhow / gravity / rhoi / (rhow-rhoi)
 #endif
 
       DO bj=myByLo(myThid),myByHi(myThid)
@@ -124,6 +135,19 @@ c       _RL total_vol_out
            u_shear(Nr+1) = 0.0
            v_shear(Nr+1) = 0.0
 
+#if (defined(STREAMICE_ALLOW_DAMAGE) || defined(STREAMICE_ALLOW_DAMAGE))
+           hf = max (0.0, -1.0 *streamice_density_ocean_avg
+     &        / streamice_density * R_low_si(i,j,bi,bj))
+#endif
+#ifdef STREAMICE_ALLOW_DAMAGE           
+           if (STREAMICE_use_damage) then
+             hab = max (0.0, H_streamice(i,j,bi,bj)-hf)
+             bdam = rhoi*hab/(rhow-rhoi)
+             S1_princ = 0.5*(exx+eyy)
+             S1_princ = S1_princ + SQRT((.5*(exx-eyy))**2+exy**2)
+           endif
+#endif
+
            DO m=Nr,1,-1
 
 #ifdef ALLOW_AUTODIFF_TAMC
@@ -160,6 +184,13 @@ CADJ &     = comlev1_stream_hybrid, key=ikey_1
      &            0.25 * streamice_vert_shear_uz(m)**2 +
      &            0.25 * streamice_vert_shear_vz(m)**2)
 
+#ifdef STREAMICE_ALLOW_DAMAGE
+            if (STREAMICE_use_damage) then
+              d_loc = adam * visc_streamice_full(i,j,m,bi,bj) * S1_princ
+     &         - bdam
+            endif
+#endif
+
 #ifdef STREAMICE_3D_GLEN_CONST
             IF (.not.STREAMICE_use_log_ctrl) THEN
              Bglen_val = B_glen(i,j,m,bi,bj)**2
@@ -181,6 +212,20 @@ CADJ &     = comlev1_stream_hybrid, key=ikey_1
 #endif
      &       .5 * Bglen_val *
      &        second_inv**((1-n_glen)/n_glen)
+
+#ifdef STREAMICE_ALLOW_DAMAGE
+            if (STREAMICE_use_damage) then
+#if (defined (ALLOW_STREAMICE_OAD_FP))
+             visc_full_new_si(i,j,m,bi,bj) =
+     &        visc_full_new_si(i,j,m,bi,bj) * 
+#else
+             visc_streamice_full(i,j,m,bi,bj) =
+     &        visc_streamice_full(i,j,m,bi,bj) * 
+#endif
+     &        (H_streamice(i,j,bi,bj)-d_loc) / 
+     &        H_streamice(i,j,bi,bj)
+            endif
+#endif
 
             visc_streamice (i,j,bi,bj) = visc_streamice (i,j,bi,bj) +
      &       H_streamice(i,j,bi,bj) * streamice_delsigma (m) *
@@ -260,8 +305,6 @@ CADJ &     = comlev1_stream_hybrid, key=ikey_1
 #ifdef STREAMICE_COULOMB_SLIDING
            ELSE
 
-           hf = max (0.0, -1.0 *streamice_density_ocean_avg
-     &        / streamice_density * R_low_si(i,j,bi,bj))
 
            effective_stress = streamice_density * gravity *
      &      (H_streamice(i,j,bi,bj)-hf)

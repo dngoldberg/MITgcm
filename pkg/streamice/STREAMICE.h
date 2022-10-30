@@ -489,6 +489,9 @@ C                                 ::  (over-rides STREAMICE_vel_ext)
       LOGICAL STREAMICE_use_log_ctrl
       LOGICAL STREAMICE_vel_ext
       LOGICAL STREAMICE_vel_ext_cgrid
+#ifdef STREAMICE_ALLOW_DAMAGE
+      LOGICAL STREAMICE_use_damage
+#endif
 #if (defined (ALLOW_OPENAD) && defined (ALLOW_STREAMICE_OAD_FP) )
 #ifdef ALLOW_PETSC
       LOGICAL STREAMICE_need2createmat
@@ -529,6 +532,9 @@ C      LOGICAL STREAMICE_hybrid_stress
      & STREAMICE_vel_ext,
      & STREAMICE_vel_ext_cgrid,
      & STREAMICE_use_log_ctrl,
+#ifdef STREAMICE_ALLOW_DAMAGE
+     & LOGICAL STREAMICE_use_damage,
+#endif
 #ifdef STREAMICE_FLOWLINE_BUTTRESS
      & useStreamiceFlowlineButtr,
 #endif
@@ -643,6 +649,9 @@ C    REAL ARRAYS
      &     H_streamice_prev,
      &     u_new_si, v_new_si, streamice_u_tavg, streamice_v_tavg,
      &     u_streamice_ext, v_streamice_ext
+#ifdef STREAMICE_ALLOW_DAMAGE
+     &     crevasse_depth_loc, crevasse_depth_adv
+#endif
 
 #ifdef ALLOW_STREAMICE_FLUX_CONTROL
       COMMON /STREAMICE_FLUX_CONTROL/
@@ -728,6 +737,10 @@ C    REAL ARRAYS
       _RL c_basal_friction    (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL u_streamice_ext     (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL v_streamice_ext     (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+#ifdef STREAMICE_ALLOW_DAMAGE
+      _RL crevasse_depth_loc  (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RL crevasse_depth_adv  (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+#endif
 C      _RL A_glen    (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
 #ifdef STREAMICE_3D_GLEN_CONST
       _RL B_glen    (1-OLx:sNx+OLx,1-OLy:sNy+OLy,Nr,nSx,nSy)
