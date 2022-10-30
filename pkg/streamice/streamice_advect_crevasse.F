@@ -151,11 +151,11 @@ CADJ STORE H_streamice  = comlev1, key=ikey_dynamics
 #endif /* ALLOW_AUTODIFF */
 
       CALL STREAMICE_ADV_FLUX_FL_X ( myThid ,
-     I   utrans ,
-     I   H_streamice ,
+     I   utrans,
+     I   crevasse_depth_advect,
      I   BCMASKX,
      I   BCVALX,
-     O   hflux_x_SI,
+     O   dflux_x_SI,
      I   time_step_loc )
 
       DO bj=myByLo(myThid),myByHi(myThid)
@@ -168,13 +168,14 @@ CADJ STORE H_streamice  = comlev1, key=ikey_dynamics
      &       .or.STREAMICE_NS_PERIODIC) THEN
 
           IF (STREAMICE_hmask(i,j,bi,bj).eq.1.0) THEN
-           h_after_uflux_SI (i,j,bi,bj) = H_streamice(i,j,bi,bj) -
-     &      (hflux_x_SI(i+1,j,bi,bj)*dyG(i+1,j,bi,bj) -
-     &        hflux_x_SI(i,j,bi,bj)*dyG(i,j,bi,bj))
+           d_after_uflux_SI (i,j,bi,bj) = 
+     &      crevasse_depth_advect(i,j,bi,bj) -
+     &      (dflux_x_SI(i+1,j,bi,bj)*dyG(i+1,j,bi,bj) -
+     &        dflux_x_SI(i,j,bi,bj)*dyG(i,j,bi,bj))
      &        * recip_rA (i,j,bi,bj) * time_step_loc
-           IF ( h_after_uflux_SI (i,j,bi,bj).le.0.0) THEN
-            PRINT *, "h neg after x", i,j,hflux_x_SI(i+1,j,bi,bj),
-     &        hflux_x_SI(i,j,bi,bj)
+           IF ( d_after_uflux_SI (i,j,bi,bj).le.0.0) THEN
+            PRINT *, "h neg after x", i,j,dflux_x_SI(i+1,j,bi,bj),
+     &        dflux_x_SI(i,j,bi,bj)
            ENDIF
           ENDIF
 
@@ -194,7 +195,7 @@ CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
      I   h_after_uflux_si ,
      I   BCMASKY,
      I   BCVALY,
-     O   hflux_y_SI,
+     O   dflux_y_SI,
      I   time_step_loc )
 
       DO bj=myByLo(myThid),myByHi(myThid)
@@ -207,13 +208,13 @@ CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
      &       .or.STREAMICE_EW_PERIODIC) THEN
 
           IF (STREAMICE_hmask(i,j,bi,bj).eq.1.0) THEN
-           h_after_vflux_SI (i,j,bi,bj) = h_after_uflux_SI(i,j,bi,bj) -
-     &      (hflux_y_SI(i,j+1,bi,bj)*dxG(i,j+1,bi,bj) -
-     &        hflux_y_SI(i,j,bi,bj)*dxG(i,j,bi,bj)) *
+           d_after_vflux_SI (i,j,bi,bj) = d_after_uflux_SI(i,j,bi,bj) -
+     &      (dflux_y_SI(i,j+1,bi,bj)*dxG(i,j+1,bi,bj) -
+     &        dflux_y_SI(i,j,bi,bj)*dxG(i,j,bi,bj)) *
      &        recip_rA (i,j,bi,bj) * time_step_loc
-           IF ( h_after_vflux_SI (i,j,bi,bj).le.0.0) THEN
-            PRINT *, "h neg after y", i,j,hflux_y_SI(i,j+1,bi,bj),
-     &        hflux_y_SI(i,j,bi,bj)
+           IF ( d_after_vflux_SI (i,j,bi,bj).le.0.0) THEN
+            PRINT *, "h neg after y", i,j,dflux_y_SI(i,j+1,bi,bj),
+     &        dflux_y_SI(i,j,bi,bj)
            ENDIF
 
           ENDIF
@@ -229,32 +230,14 @@ CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
         DO j=1,sNy
          DO i=1,sNx
           IF (STREAMICE_hmask(i,j,bi,bj).eq.1.0) THEN
-           H_streamice (i,j,bi,bj) =
-     &      h_after_vflux_SI (i,j,bi,bj)
+            crevasse_depth_advect(i,j,bi,bj) =
+     &      d_after_vflux_SI (i,j,bi,bj)
           ENDIF
          ENDDO
         ENDDO
        ENDDO
       ENDDO
 
-! NOTE: AT THIS POINT H IS NOT VALID ON OVERLAP!!!
-
-      if (streamice_move_front) then
-      CALL STREAMICE_ADV_FRONT (
-     &  myThid, time_step_loc,
-     &  hflux_x_SI, hflux_y_SI )
-      endif
-
-#ifdef ALLOW_STREAMICE_2DTRACER
-      CALL STREAMICE_ADVECT_2DTRACER(
-     &  myThid,
-     &  myIter,
-     &  time_step,
-     &  uTrans,
-     &  vTrans,
-     &  BCMASKx,
-     &  BCMASKy )
-#endif
 
 #ifndef ALLOW_AUTODIFF
       time_step_rem = time_step_rem - time_step_loc
@@ -290,17 +273,11 @@ CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
            ENDIF
 
            SMB = ADOT_STREAMICE(i,j,bi,bj)
-           TMB = SMB - MR
-           IF ((TMB.lt.0.0) .and.
-     &         (MR * time_step_loc .gt.
-     &          H_streamice (i,j,bi,bj))) THEN
-                H_streamice (i,j,bi,bj) = 0. _d 0
-                STREAMICE_hmask(i,j,bi,bj) = 0.0
-               PRINT *, "GOT HERE melted away! ", i,j
-           ELSE
-               H_streamice (i,j,bi,bj) =
-     &          H_streamice (i,j,bi,bj) + TMB * time_step_loc
-           ENDIF
+
+           crevasse_depth_advect(i,j,bi,bj) = 
+     &      crevasse_depth_advect(i,j,bi,bj) - 
+     &      (max(SMB,0.0) + max(MR,0.0)) * 
+     &      d_prev/H_streamice(i,j,bi,bj)      
 
           ENDIF
          ENDDO
@@ -308,12 +285,12 @@ CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
        ENDDO
       ENDDO
 
-      _EXCH_XY_RL(H_streamice,myThid)
+      _EXCH_XY_RL(crevasse_depth_advect,myThid)
 
-      WRITE(msgBuf,'(A)') 'END STREAMICE_ADVECT_THICKNESS'
+      WRITE(msgBuf,'(A)') 'END STREAMICE_ADVECT_CREVASSE'
        CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
      &                     SQUEEZE_RIGHT , 1)
-      CALL TIMER_STOP ('STREAMICE_ADVECT_THICKNESS',myThid)
+      CALL TIMER_STOP ('STREAMICE_ADVECT_CREVASSE',myThid)
 
 #endif
       RETURN

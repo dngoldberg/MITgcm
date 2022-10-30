@@ -59,7 +59,7 @@ C     LOCAL VARIABLES
 #endif
       _RL STREAMICE_BSTRESS_EXP
 #ifdef STREAMICE_ALLOW_DAMAGE           
-      _RL S1_princ, adam, bdam, h_ab, d_loc, rhoi, rhow
+      _RL S1_princ, adam, bdam, h_ab, d_loc, rhoi, rhow, cdepth, db
 #endif
 #if (defined(STREAMICE_ALLOW_DAMAGE) || defined(STREAMICE_ALLOW_DAMAGE))
       _RL hf
@@ -186,8 +186,20 @@ CADJ &     = comlev1_stream_hybrid, key=ikey_1
 
 #ifdef STREAMICE_ALLOW_DAMAGE
             if (STREAMICE_use_damage) then
-              d_loc = adam * visc_streamice_full(i,j,m,bi,bj) * S1_princ
-     &         - bdam
+              db = rhoi/(rhow-rhoi) * 
+     &         (visc_streamice_full(i,j,m,bi,bj) * S1_princ 
+     &         / rhoi / gravity - hab)
+              if (db .lt. 0.0) then
+                d_loc = visc_streamice_full(i,j,m,bi,bj) * S1_princ /
+     &           rhoi / gravity
+              else
+                d_loc = adam * visc_streamice_full(i,j,m,bi,bj) * 
+     &           S1_princ - bdam
+              endif
+              d_loc = min(d_loc, H_streamice(i,j,bi,bj))
+              d_loc = max(d_loc, 0.0)
+              cdepth = max(d_loc,crevasse_depth_advect(i,j,bi,bj))
+              crevasse_depth_advect(i,j,bi,bj) = cdepth
             endif
 #endif
 
@@ -222,7 +234,7 @@ CADJ &     = comlev1_stream_hybrid, key=ikey_1
              visc_streamice_full(i,j,m,bi,bj) =
      &        visc_streamice_full(i,j,m,bi,bj) * 
 #endif
-     &        (H_streamice(i,j,bi,bj)-d_loc) / 
+     &        (H_streamice(i,j,bi,bj)-cdepth) / 
      &        H_streamice(i,j,bi,bj)
             endif
 #endif
@@ -347,7 +359,10 @@ CADJ &     = comlev1_stream_hybrid, key=ikey_1
      &  0. * streamice_v_surf(1,1,1,1)
 #endif
 #endif
-
+#ifdef STREAMICE_ALLOW_DAMAGE
+      if (STREAMICE_use_damage) then
+       _EXCH_XY_RL(crevasse_depth_advect,myThid)
+      endif
 #endif
 #endif
       RETURN
