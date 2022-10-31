@@ -533,7 +533,7 @@ C      LOGICAL STREAMICE_hybrid_stress
      & STREAMICE_vel_ext_cgrid,
      & STREAMICE_use_log_ctrl,
 #ifdef STREAMICE_ALLOW_DAMAGE
-     & LOGICAL STREAMICE_use_damage,
+     & STREAMICE_use_damage,
 #endif
 #ifdef STREAMICE_FLOWLINE_BUTTRESS
      & useStreamiceFlowlineButtr,
@@ -650,7 +650,7 @@ C    REAL ARRAYS
      &     u_new_si, v_new_si, streamice_u_tavg, streamice_v_tavg,
      &     u_streamice_ext, v_streamice_ext
 #ifdef STREAMICE_ALLOW_DAMAGE
-     &     crevasse_depth_loc, crevasse_depth_adv
+     &     ,crevasse_depth_loc, crevasse_depth_adv
 #endif
 
 #ifdef ALLOW_STREAMICE_FLUX_CONTROL

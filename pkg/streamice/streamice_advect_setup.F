@@ -45,7 +45,6 @@ C     === Global variables ===
       _RL time_step
       _RL flux_bdry_x(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL flux_bdry_y(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
-      _RL BCVALY(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL BCVALX(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL BCVALY(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RS BCMASKX(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
@@ -56,6 +55,7 @@ C     === Global variables ===
 #ifdef ALLOW_STREAMICE
 
       INTEGER i, j, bi, bj, Gi, Gj, k
+      _RL uflux, vflux
 
       DO bj=myByLo(myThid),myByHi(myThid)
        DO bi=myBxLo(myThid),myBxHi(myThid)
