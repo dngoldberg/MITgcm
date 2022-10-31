@@ -140,7 +140,7 @@ C     LOCAL VARIABLES
      &        / streamice_density * R_low_si(i,j,bi,bj))
 #endif
 #ifdef STREAMICE_ALLOW_DAMAGE           
-           if (STREAMICE_use_damage) then
+           if (useStreamiceDamage) then
              h_ab = max (0.0, H_streamice(i,j,bi,bj)-hf)
              bdam = rhoi*h_ab/(rhow-rhoi)
              S1_princ = 0.5*(exx+eyy)
@@ -185,7 +185,7 @@ CADJ &     = comlev1_stream_hybrid, key=ikey_1
      &            0.25 * streamice_vert_shear_vz(m)**2)
 
 #ifdef STREAMICE_ALLOW_DAMAGE
-            if (STREAMICE_use_damage) then
+            if (useStreamiceDamage) then
               db = rhoi/(rhow-rhoi) * 
      &         (visc_streamice_full(i,j,m,bi,bj) * S1_princ 
      &         / rhoi / gravity - h_ab)
@@ -226,7 +226,7 @@ CADJ &     = comlev1_stream_hybrid, key=ikey_1
      &        second_inv**((1-n_glen)/n_glen)
 
 #ifdef STREAMICE_ALLOW_DAMAGE
-            if (STREAMICE_use_damage) then
+            if (useStreamiceDamage) then
 #if (defined (ALLOW_STREAMICE_OAD_FP))
              visc_full_new_si(i,j,m,bi,bj) =
      &        visc_full_new_si(i,j,m,bi,bj) * 
@@ -360,7 +360,7 @@ CADJ &     = comlev1_stream_hybrid, key=ikey_1
 #endif
 #endif
 #ifdef STREAMICE_ALLOW_DAMAGE
-      if (STREAMICE_use_damage) then
+      if (useStreamiceDamage) then
        _EXCH_XY_RL(crevasse_depth_adv,myThid)
       endif
 #endif

@@ -104,6 +104,9 @@ c     INTEGER iarr, tarr
      &     STREAMICE_vel_ext_cgrid,
      &     STREAMICE_uvel_ext_file,
      &     STREAMICE_vvel_ext_file,
+#ifdef STREAMICE_ALLOW_DAMAGE
+     &     useStreamiceDamage,
+#endif      
 #ifdef STREAMICE_FLOWLINE_BUTTRESS
      &     streamice_buttr_width,
      &     useStreamiceFlowlineButtr,
@@ -326,6 +329,9 @@ c      STREAMICE_construct_matrix = .TRUE.
       STREAMICE_diagnostic_only = .FALSE.
 #ifdef STREAMICE_FLOWLINE_BUTTRESS
       useStreamiceFlowlineButtr=.FALSE.
+#endif
+#ifdef STREAMICE_ALLOW_DAMAGE
+      usestreamicedamage=.FALSE.
 #endif
       STREAMICE_ppm_driving_stress = .FALSE.
       STREAMICE_chkfixedptconvergence = .true.

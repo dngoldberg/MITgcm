@@ -490,7 +490,7 @@ C                                 ::  (over-rides STREAMICE_vel_ext)
       LOGICAL STREAMICE_vel_ext
       LOGICAL STREAMICE_vel_ext_cgrid
 #ifdef STREAMICE_ALLOW_DAMAGE
-      LOGICAL STREAMICE_use_damage
+      LOGICAL useStreamiceDamage
 #endif
 #if (defined (ALLOW_OPENAD) && defined (ALLOW_STREAMICE_OAD_FP) )
 #ifdef ALLOW_PETSC
@@ -533,7 +533,7 @@ C      LOGICAL STREAMICE_hybrid_stress
      & STREAMICE_vel_ext_cgrid,
      & STREAMICE_use_log_ctrl,
 #ifdef STREAMICE_ALLOW_DAMAGE
-     & STREAMICE_use_damage,
+     & useStreamiceDamage,
 #endif
 #ifdef STREAMICE_FLOWLINE_BUTTRESS
      & useStreamiceFlowlineButtr,

@@ -139,6 +139,15 @@ c     INTEGER       diagMate
       CALL DIAGNOSTICS_ADDTOLIST( diagNum,
      I      diagName, diagCode, diagUnits, diagTitle, 0, myThid )
 
+#ifdef STREAMICE_ALLOW_DAMAGE
+      diagName  = 'CDEPTH  '
+      diagTitle = 'Ice stream 2d tracer'
+      diagUnits = 'none       '
+      diagCode  = 'SM      L1      '
+      CALL DIAGNOSTICS_ADDTOLIST( diagNum,
+     I      diagName, diagCode, diagUnits, diagTitle, 0, myThid )
+#endif      
+
       WRITE(msgBuf,'(A)') 'ADDED DIAGS TO LIST'
        CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
      &                     SQUEEZE_RIGHT , 1)

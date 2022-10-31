@@ -150,6 +150,10 @@ C---    read STREAMICE 2-D fields for restart
         CALL READ_MFLDS_3D_RL( 'SI_tauby', streamice_tauby,
      &                                 nj, fp, 1 , myIter, myThid )
 #endif
+#ifdef STREAMICE_ALLOW_DAMAGE
+        CALL READ_MFLDS_3D_RL( 'CDEPTH  ', crevasse_depth_adv,
+     &                                 nj, fp, 1 , myIter, myThid )
+#endif        
 
 C--    end: new way to read pickup file
        ENDIF

@@ -62,6 +62,8 @@ C     === Global variables ===
       time_step_full = time_step_loc
       time_step_rem = time_step_loc
 
+      if (useStreamiceDamage) then
+
 #ifdef ALLOW_AUTODIFF_TAMC
 CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
 #endif
@@ -278,7 +280,7 @@ CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
            crevasse_depth_adv(i,j,bi,bj) = 
      &      crevasse_depth_adv(i,j,bi,bj) - 
      &      (max(SMB,0.0) + max(MR,0.0)) * 
-     &      d_prev/H_streamice(i,j,bi,bj)      
+     &      d_prev(i,j,bi,bj)/H_streamice(i,j,bi,bj)      
 
           ENDIF
          ENDDO
@@ -292,6 +294,8 @@ CADJ STORE streamice_hmask  = comlev1, key=ikey_dynamics
        CALL PRINT_MESSAGE( msgBuf, standardMessageUnit,
      &                     SQUEEZE_RIGHT , 1)
       CALL TIMER_STOP ('STREAMICE_ADVECT_CREVASSE',myThid)
+
+      endif
 
 #endif
       RETURN

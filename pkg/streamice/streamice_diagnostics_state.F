@@ -165,6 +165,11 @@ C     === Global variables ===
 #endif
 #endif
 
+#ifdef STREAMICE_ALLOW_DAMAGE
+       CALL DIAGNOSTICS_FILL(crevasse_depth_adv,'CDEPTH  ',
+     &      0,1,0,1,1,myThid)
+#endif       
+
       ENDIF
 
 #endif /* ALLOW_DIAGNOSTICS */
