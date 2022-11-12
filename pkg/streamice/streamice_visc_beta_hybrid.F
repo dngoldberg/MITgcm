@@ -61,7 +61,7 @@ C     LOCAL VARIABLES
 #ifdef STREAMICE_ALLOW_DAMAGE           
       _RL S1_princ, adam, bdam, h_ab, d_loc, rhoi, rhow, cdepth, db
 #endif
-#if (defined(STREAMICE_ALLOW_DAMAGE) || defined(STREAMICE_ALLOW_DAMAGE))
+#if (defined(STREAMICE_COULOMB_SLIDING) || defined(STREAMICE_ALLOW_DAMAGE))
       _RL hf
 #endif
       EXTERNAL STREAMICE_BSTRESS_EXP
@@ -135,7 +135,7 @@ C     LOCAL VARIABLES
            u_shear(Nr+1) = 0.0
            v_shear(Nr+1) = 0.0
 
-#if (defined(STREAMICE_ALLOW_DAMAGE) || defined(STREAMICE_ALLOW_DAMAGE))
+#if (defined(STREAMICE_COULOMB_SLIDING) || defined(STREAMICE_ALLOW_DAMAGE))
            hf = max (0.0, -1.0 *streamice_density_ocean_avg
      &        / streamice_density * R_low_si(i,j,bi,bj))
 #endif
@@ -363,6 +363,7 @@ CADJ &     = comlev1_stream_hybrid, key=ikey_1
       if (useStreamiceDamage) then
        _EXCH_XY_RL(crevasse_depth_adv,myThid)
       endif
+#endif
 #endif
 #endif
       RETURN
