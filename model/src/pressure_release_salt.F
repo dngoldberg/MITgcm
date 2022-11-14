@@ -93,7 +93,8 @@ C faces.
 
 
           IF (k .EQ. k_cw) THEN
-           if (k_cw.gt.0 .and. k_w.gt.0) then
+           if (k_cw.gt.0 .and. k_w.gt.0 .and.
+     &         k_cw.le.Nr .and. k_w.le.Nr) then
             S_trans_west =0.5 _d 0  * 
      &                  ( pReleaseTransX(i,j,bi,bj) *
      &                  (salt(i-1,j,k_w,bi,bj)+salt(i,j,k_cw,bi,bj))
@@ -109,7 +110,8 @@ C faces.
            endif
           ENDIF
           IF (k .EQ. k_ce) THEN
-           if (k_ce.gt.0 .and. k_e.gt.0) then
+           if (k_ce.gt.0 .and. k_e.gt.0 .and.
+     &         k_ce.le.Nr .and. k_e.le.Nr) then
             S_trans_east =0.5 _d 0  *
      &                  ( pReleaseTransX(i+1,j,bi,bj) *
      &                  (salt(i,j,k_ce,bi,bj)+salt(i+1,j,k_e,bi,bj))
@@ -129,7 +131,8 @@ C faces.
            endif
           ENDIF
           IF (k .EQ. k_cs) THEN
-           if (k_cs.gt.0 .and. k_s.gt.0) then
+           if (k_cs.gt.0 .and. k_s.gt.0 .and.
+     &         k_cs.le.Nr .and. k_s.le.Nr) then
             S_trans_south =0.5 _d 0  *
      &                  ( pReleaseTransY(i,j,bi,bj) *
      &                  (salt(i,j-1,k_s,bi,bj)+salt(i,j,k_cs,bi,bj))
@@ -149,7 +152,8 @@ C faces.
            endif
           ENDIF
           IF (k .EQ. k_cn) THEN
-           if (k_cn.gt.0 .and. k_n.gt.0) then
+           if (k_cn.gt.0 .and. k_n.gt.0 .and.
+     &         k_cn.le.Nr .and. k_n.le.Nr) then
             S_trans_north =0.5 _d 0  *
      &                  ( pReleaseTransY(i,j+1,bi,bj) *
      &                  (salt(i,j,k_cn,bi,bj)+salt(i,j+1,k_n,bi,bj))

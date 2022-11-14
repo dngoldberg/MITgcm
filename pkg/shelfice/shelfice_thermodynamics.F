@@ -481,8 +481,12 @@ C    Average at u- and v- points over deltaR. use later to override uLoc/vLoc
             drKp1 = drF(K)*( 1. _d 0 - _hFacW(I,J,K,bi,bj) )
             drKp1 = MIN( drKp1, drF(Kp1) * _hFacW(I,J,Kp1,bi,bj) )
             drKp1 = MAX( drKp1, 0. _d 0 )
-            recip_drLoc = 1. _d 0
-     &                  / ( drF(K)*_hFacW(I,J,K,bi,bj) + drKp1 )
+            IF ((drF(K)*hFacW(I,J,K,bi,bj) + drKp1).gt.0) THEN
+             recip_drLoc = 1.D0
+     &                  / ( drF(K)*hFacW(I,J,K,bi,bj) + drKp1 )
+            ELSE
+             recip_drLoc = 0.
+            ENDIF
             uLoc(I,J) = ( drF(K)*_hFacW(I,J,K,bi,bj)*uVel(I,J,K,bi,bj)
      &                  + drKp1*uVel(I,J,Kp1,bi,bj)
      &                  )*recip_drLoc
