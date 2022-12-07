@@ -1,10 +1,7 @@
 #include "BLING_OPTIONS.h"
-#ifdef ALLOW_AUTODIFF
-# include "AUTODIFF_OPTIONS.h"
-#endif
 
 CBOP
-      SUBROUTINE BLING_LIGHT(
+      subroutine BLING_LIGHT(
      I           mld,
      U           irr_inst, irr_eff,
      I           bi, bj, imin, imax, jmin, jmax,
@@ -48,7 +45,7 @@ C     irr_mem       :: Phyto irradiance memory
 #ifdef USE_QSW
 #include "FFIELDS.h"
 #endif
-#ifdef ALLOW_AUTODIFF_TAMC
+#ifdef ALLOW_AUTODIFF
 # include "tamc.h"
 #endif
 
@@ -86,34 +83,44 @@ C     === Local variables ===
 #ifndef USE_QSW
       _RL sfac      (1-OLy:sNy+OLy)
 #endif
+CAV(
 #ifdef PHYTO_SELF_SHADING
-      _RL k0_rd, chi_rd, e_rd
-      _RL k0_bg, chi_bg, e_bg
+CAT      _RL k0_rd, chi_rd, e_rd
+CAT      _RL k0_bg, chi_bg, e_bg
       _RL kChl_rd   (1-OLx:sNx+OLx,1-OLy:sNy+OLy,Nr)
       _RL kChl_bg   (1-OLx:sNx+OLx,1-OLy:sNy+OLy,Nr)
       _RL atten_rd
       _RL atten_bg
       _RL irr_rd    (1-OLx:sNx+OLx,1-OLy:sNy+OLy,Nr)
       _RL irr_bg    (1-OLx:sNx+OLx,1-OLy:sNy+OLy,Nr)
+CAT add variables for calculating euphotic depth
+      _RL irr_face 
+      _RL zeu_frac
+      _RL atten_bg_face
+      _RL atten_rd_face
+      _RL irr_bg_face
+      _RL irr_rd_face
+      _RL zeu       (1-OLx:sNx+OLx,1-OLy:sNy+OLy)
+      _RL mld_zeu   (1-OLx:sNx+OLx,1-OLy:sNy+OLy)
+      _RL zeu_mld   (1-OLx:sNx+OLx,1-OLy:sNy+OLy)
 #endif
+CAV)
       INTEGER i,j,k
-      LOGICAL QSW_underice
+CMM(
+      _RL minusOne
+      PARAMETER (minusOne=-1.)
+#ifdef USE_QSW_Z
+      INTEGER kp1
+      _RL swfracb(2)
+#endif
+CMM)
+       LOGICAL QSW_underice
 CEOP
-
-#ifdef PHYTO_SELF_SHADING
-# ifdef ALLOW_AUTODIFF_TAMC
-      itdkey = bi + (bj - 1)*nSx + (ikey_dynamics - 1)*nSx*nSy
-# endif /* ALLOW_AUTODIFF_TAMC */
-#endif /* PHYTO_SELF_SHADING */
 
        DO k=1,Nr
         DO j=jmin,jmax
           DO i=imin,imax
-              irr_eff(i,j,k) = 0. _d 0
-#ifdef PHYTO_SELF_SHADING
-              irr_rd(i,j,k)        = 0. _d 0
-              irr_bg(i,j,k)        = 0. _d 0
-#endif
+              irr_eff(i,j,k)        = 0. _d 0
           ENDDO
         ENDDO
        ENDDO
@@ -202,14 +209,32 @@ c  taken into account
 
         DO k=1,Nr
 
-#ifdef PHYTO_SELF_SHADING
-# ifdef ALLOW_AUTODIFF_TAMC
-CADJ STORE irr_bg = comlev1_bibj, key=itdkey, kind=isbyte
-CADJ STORE irr_rd = comlev1_bibj, key=itdkey, kind=isbyte
-# endif /* ALLOW_AUTODIFF_TAMC */
-#endif /* PHYTO_SELF_SHADING */
-
          IF (hFacC(i,j,k,bi,bj).gt.0) THEN
+
+CMM(
+#ifdef USE_QSW_Z
+
+C Penetrating SW radiation
+       swfracb(1)=abs(rF(k))
+       swfracb(2)=abs(rF(k+1))
+       CALL SWFRAC(
+     I             2, minusOne,
+     U             swfracb,
+     I             myTime, 1, myThid )
+       kp1 = k+1
+       IF (k.EQ.Nr) THEN
+        kp1 = k
+        swfracb(2)=0. _d 0
+       ENDIF
+         irr_inst(i,j,k) =
+     &         irr_surf(i,j)*(swfracb(1)*maskC(i,j,k,bi,bj)
+     &         -swfracb(2)*maskC(i,j,kp1, bi,bj))
+     &         *recip_drF(k)*_recip_hFacC(i,j,k,bi,bj)
+
+#else
+CMM)
+
+CAV(
 #ifdef PHYTO_SELF_SHADING
 
 c  Use bio-optical model of Manizza et al. (2005) to account for
@@ -220,12 +245,12 @@ c  is instead calculated in the subroutine swfrac
 
 c  Specify co-efficients for bio-optical model {kChl = k0 +chi[chl]^e}
 c  in red and blue-green fractions (Morel 1988; Foujols et al. 2000)
-        k0_rd  = 0.225 _d 0
-        k0_bg  = 0.0232 _d 0
-        chi_rd = 0.037 _d 0
-        chi_bg = 0.074 _d 0
-        e_rd   = 0.629 _d 0
-        e_bg   = 0.674 _d 0
+C        k0_rd  = 0.225 _d 0
+C        k0_bg  = 0.0232 _d 0
+C        chi_rd = 0.037 _d 0
+C        chi_bg = 0.074 _d 0
+C        e_rd   = 0.629 _d 0
+C        e_bg   = 0.674 _d 0
 
          IF (k.eq.1) THEN
 c  Attenuation coefficient adjusted to chlorophyll in top layer
@@ -235,8 +260,8 @@ c  Light attenuation in middle of top layer
           atten_rd = kChl_rd(i,j,1)*drF(1)/2. _d 0*hFacC(i,j,1,bi,bj)
           atten_bg = kChl_bg(i,j,1)*drF(1)/2. _d 0*hFacC(i,j,1,bi,bj)
 c  Irradiance in middle of top layer
-          irr_rd(i,j,1) = irr_surf(i,j) * exp(-atten_rd) * 0.5 _d 0
-          irr_bg(i,j,1) = irr_surf(i,j) * exp(-atten_bg) * 0.5 _d 0
+          irr_rd(i,j,1) = irr_surf(i,j) * exp(-atten_rd) / 2. _d 0
+          irr_bg(i,j,1) = irr_surf(i,j) * exp(-atten_bg) / 2. _d 0
           irr_inst(i,j,1) = irr_rd(i,j,1) + irr_bg(i,j,1)
          ELSE
 
@@ -255,6 +280,8 @@ c  Irradiance in middle of layer k
          ENDIF
 
 #else
+CAV)
+
 C SW radiation attenuated exponentially
          IF (k.eq.1) THEN
 c  Light attenuation in middle of top layer
@@ -268,7 +295,13 @@ c  Attenuation from one more layer
      &           irr_inst(i,j,k-1)*exp(-atten)
          ENDIF
 
+CAV(
 #endif /* if BLING_USE_SHADING */
+CAV)
+
+CMM(
+#endif /* if USE_QSW_Z */
+CMM)
 
 #ifdef ML_MEAN_LIGHT
 c  Mean irradiance in the mixed layer
@@ -291,21 +324,64 @@ c  Mean irradiance in the mixed layer
         DO i=imin,imax
 
          IF (hFacC(i,j,k,bi,bj) .gt. 0. _d 0) THEN
+
           irr_eff(i,j,k) = irr_inst(i,j,k)
 
 #ifdef ML_MEAN_LIGHT
 c  Inside mixed layer, effective light is set to mean mixed layer light
-         IF ((-rf(k+1) .le. mld(i,j)).and.
+          IF ((-rf(k+1) .le. mld(i,j)).and.
      &               (-rf(k+1).lt.MLmix_max)) THEN
            irr_eff(i,j,k) = irr_mix(i,j)
           ENDIF
 #endif
+#ifdef PHYTO_SELF_SHADING
+CAT add in calculation of self-shaded euphotic depth
+          IF (( irr_inst(i,j,k) .gt. irr_surf(i,j)/100. _d 0) .and.
+     &         irr_inst(i,j,k+1) .lt. irr_surf(i,j)/100. _d 0) THEN
+#ifdef BLING_HEATING_
+           irr_face = (swfrac_rd(i,j,k+1) + swfrac_bg(i,j,k+1))
+     &               * irr_surf(i,j)
+#else
+           atten_rd_face = kChl_rd(i,j,k) * drF(k)/2. _d 0
+     &               * hFacC(i,j,k,bi,bj)
+           atten_bg_face = kChl_bg(i,j,k) * drF(k)/2. _d 0
+     &               * hFacC(i,j,k,bi,bj)
 
+           irr_rd_face = irr_rd(i,j,k) * exp(-atten_bg_face)
+           irr_bg_face = irr_bg(i,j,k) * exp(-atten_bg_face)
+           irr_face = irr_rd_face + irr_bg_face
+#endif  
+           IF ( irr_face .lt. irr_surf(i,j)/100. ) THEN
+CAT Euphotic depth in current cell
+            zeu_frac = (irr_inst(i,j,k) - irr_surf(i,j)/100. _d 0)
+     &               / (irr_inst(i,j,k) - irr_face)
+            zeu(i,j) = -rc(k) + drF(k) * zeu_frac / 2. _d 0
+           ELSE
+CAT Euphotic depth within cell below
+            zeu_frac = (irr_surf(i,j)/100. _d 0 - irr_inst(i,j,k+1))
+     &               / (irr_face - irr_inst(i,j,k+1))
+            zeu(i,j) = -rc(k+1) - drF(k+1) * zeu_frac / 2. _d 0
+           ENDIF
+CAT Ratio of mixed layer depth to euphotic depth, for diagnostics
+           mld_zeu(i,j) = mld(i,j)/zeu(i,j)
+           zeu_mld(i,j) = zeu(i,j)/mld(i,j)
+          ENDIF
+#endif         
          ENDIF
-
         ENDDO
        ENDDO
       ENDDO
 
+#ifdef PHYTO_SELF_SHADING
+CAT write out diagnostics for euphotic depth
+      IF ( useDiagnostics ) THEN
+c 2d local variables
+        CALL DIAGNOSTICS_FILL(zeu,       'BLGZEU  ',0,1,1,bi,bj,myThid)
+        CALL DIAGNOSTICS_FILL(mld_zeu,   'BLGMLZEU',0,1,1,bi,bj,myThid)
+        CALL DIAGNOSTICS_FILL(zeu_mld,   'BLGZEUML',0,1,1,bi,bj,myThid)
+      ENDIF
+#endif
+
       RETURN
       END
+

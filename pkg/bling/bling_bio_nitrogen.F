@@ -790,11 +790,11 @@ C kNO3: 2e-6
 C kFe: 1.6e-10
 
           k_NO3_sm = 2.0 _d -6 / permil
-          k_NO3_lg = 6.0 _d -6 / permil
+          k_NO3_lg = 2.0 _d -6 / permil
           k_PO4_sm = 1.0 _d -8 / permil
-          k_PO4_lg = 3.0 _d -8 / permil
-          k_Fe_sm = 1.6 _d -10 / permil
-          k_Fe_lg = 4.8 _d -10 / permil
+          k_PO4_lg = 1.0 _d -8 / permil
+          k_Fe_sm = 2 _d -7
+          k_Fe_lg = 1.5 _d -7
 
           NO3_lim_sm(i,j,k) = PTR_NO3(i,j,k)/(PTR_NO3(i,j,k)+k_NO3_sm)
 

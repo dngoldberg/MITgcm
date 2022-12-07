@@ -53,7 +53,6 @@ C     myThid :: Thread no. that called this routine.
       INTEGER myIter, myThid
 CEOP
 
-#ifndef SEAICE_USE_GROWTH_ADX
 #if (defined ALLOW_EXF) && (defined ALLOW_ATM_TEMP)
 C     !FUNCTIONS:
 #ifdef ALLOW_DIAGNOSTICS
@@ -491,8 +490,8 @@ C for lateral melt parameterization:
          ENDDO
         ENDDO
 #if (defined (ALLOW_MEAN_SFLUX_COST_CONTRIBUTION) || defined (ALLOW_SSH_GLOBMEAN_COST_CONTRIBUTION))
-        DO J=1-OLy,sNy+OLy
-         DO I=1-OLx,sNx+OLx
+        DO J=1-oLy,sNy+oLy
+         DO I=1-oLx,sNx+oLx
           frWtrAtm(I,J,bi,bj)        = 0.0 _d 0
          ENDDO
         ENDDO
@@ -833,8 +832,7 @@ CADJ &     comlev1_bibj, key = iicekey, byte = isbyte
 #ifdef SEAICE_CAP_SUBLIM
      I        latentHeatFluxMaxMult(1,1,IT),
 #endif
-     I        ticeInMult(1,1,IT),
-     O        ticeOutMult(1,1,IT),
+     U        ticeInMult(1,1,IT), ticeOutMult(1,1,IT),
      O        a_QbyATMmult_cover(1,1,IT),
      O        a_QSWbyATMmult_cover(1,1,IT),
      O        a_FWbySublimMult(1,1,IT),
@@ -1597,6 +1595,16 @@ C           Initial ice growth is triggered by open water
 C           heat flux overcoming potential melt by ocean
             tmpscal1=r_QbyATM_open(I,J)+r_QbyOCN(i,j) *
      &            (1.0 _d 0 - AREApreTH(I,J))
+#ifdef ALLOW_BLING
+#ifdef BLING_HEATING
+      IF ( useBLING ) THEN 
+C           If bio-optical feedbacks enabled, fraction of flux
+C           penetrating first layer is function of modelled chlorophyll
+            SWFracB = swfrac_ir(i,j,2,bi,bj) + swfrac_rd(i,j,2,bi,bj)
+     &              + swfrac_bg(i,j,2,bi,bj) 
+      ENDIF
+#endif
+#endif 
 C           Penetrative shortwave flux beyond first layer
 C           that is therefore not available to ice growth/melt
             tmpscal2=SWFracB * a_QSWbyATM_open(I,J)
@@ -2708,7 +2716,6 @@ C SIatmFW follows the same convention as empmr -- SIatmFW diag does not
 #else  /* ALLOW_EXF and ALLOW_ATM_TEMP */
       STOP 'SEAICE_GROWTH not compiled without EXF and ALLOW_ATM_TEMP'
 #endif /* ALLOW_EXF and ALLOW_ATM_TEMP */
-#endif /* ndef SEAICE_USE_GROWTH_ADX */
 
       RETURN
       END
