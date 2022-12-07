@@ -688,11 +688,13 @@ C heating due to chlorophyll
      &   +swfrac_rd(i,j,k,bi,bj)+swfrac_bg(i,j,k,bi,bj)
          IF (k.EQ.Nr) THEN
          swfracb(2)=0. _d 0
+         kp1 = k
          ELSE
-         swfracb(2) = swfrac_ir(i,j,k+1,bi,bj)
-     &   +swfrac_rd(i,j,k+1,bi,bj)+swfrac_bg(i,j,k+1,bi,bj)
+         kp1 = k+1
+         swfracb(2) = swfrac_ir(i,j,kp1,bi,bj)
+     &   +swfrac_rd(i,j,kp1,bi,bj)+swfrac_bg(i,j,kp1,bi,bj)
          ENDIF
-#else 
+#else
          swfracb(1)=abs(rF(k))
          swfracb(2)=abs(rF(k+1))
          CALL SWFRAC(
