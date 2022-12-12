@@ -369,9 +369,7 @@ CAT      CatoN                = CtoN * 0.015 _d 0 [[ no coccolithophores!!]]
       masstoN              = CtoN * 12.001 _d 0
 #ifndef USE_BLING_V1
       pivotal              = 1.9 _d -3 / 1028. _d 0 / CtoN / permil
-CAT   For no_bio expt, set maximum growth rate to zero
-CAT      Pc_0                 = 1.7 _d -5
-      Pc_0                 = 0
+      Pc_0                 = 1.7 _d -5
 CAT   No diazotrophs in the ASP
 CAT      Pc_0_diaz            = 0.01 _d -5 [[ no diazotrophs!!]]
       Pc_0_diaz            = 0
