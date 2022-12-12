@@ -71,7 +71,8 @@ CEOP
 #endif
      &     SHELFICEremeshFrequency,
      &     SHELFICEsplitThreshold, SHELFICEmergeThreshold,
-     &     SHELFICEptracConc, shelfice_forcing_period      
+     &     SHELFICEptracConc, shelfice_forcing_period,
+     &     shelfice_extern_forcing_cycle
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 
@@ -117,6 +118,7 @@ C Set defaults values for parameters in SHELFICE.h
       SHELFICEthetaSurface     = - 20.0 _d 0
       SHELFICEptracConc        = 0. _d 0
       shelfice_forcing_period  = 0. _d 0
+      shelfice_extern_forcing_cycle = 0. _d 0
       no_slip_shelfice         = no_slip_bottom
       SHELFICEDragLinear       = bottomDragLinear
       SHELFICEDragQuadratic    = UNSET_RL

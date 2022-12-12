@@ -124,7 +124,8 @@ CEOP
      &     shiPrandtl, shiSchmidt, shiKinVisc,
      &     SHELFICEremeshFrequency,
      &     SHELFICEsplitThreshold, SHELFICEmergeThreshold,
-     &     SHELFICEptracConc, shelfice_forcing_period		 
+     &     SHELFICEptracConc, shelfice_forcing_period,
+     &     shelfice_extern_forcing_cycle
 
       _RL SHELFICE_dumpFreq, SHELFICE_taveFreq
       _RL SHELFICEheatTransCoeff
@@ -143,6 +144,7 @@ CEOP
       _RL SHELFICEmergeThreshold
       _RL SHELFICEptracConc
       _RL shelfice_forcing_period		  
+      _RL shelfice_extern_forcing_cycle
 
       COMMON /SHELFICE_FIELDS_RL/
      &     shelficeMass, shelficeMassInit,

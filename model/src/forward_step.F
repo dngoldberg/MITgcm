@@ -434,6 +434,15 @@ C--   Remesh shelfice
       ENDIF
 #endif /* ALLOW_SHELFICE_REMESHING */
 
+#ifdef ALLOW_SHELFICE
+#ifdef ALLOW_SHELFICE_TIMEDEP_FORCING
+      IF ( useShelfIce ) THEN
+C--   Remesh shelfice
+        CALL SHELFICE_FIELDS_LOAD ( myTime, myIter, myThid )
+      ENDIF
+#endif /* ALLOW_SHELFICE */
+#endif      
+
 C--   Reset geometric factors (hFacC,W,S & recip_hFac) to their current values:
 C     added to simplify adjoint derivation - no effect in forward run
 #ifdef NONLIN_FRSURF

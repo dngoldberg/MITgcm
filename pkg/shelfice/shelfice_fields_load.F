@@ -83,7 +83,8 @@ C--   Now calculate whether it is time to update the forcing arrays
        if (externForcingCycle .eq. 0.0 ) THEN
         CALL GET_PERIODIC_INTERVAL(
      O                   nmP, nm0, nm1, tmpFac, fac,
-     I                   externForcingCycle, shelfice_forcing_period,
+     I                   shelfice_extern_forcing_cycle, 
+     I                   shelfice_forcing_period,
      I                   deltaTclock, 
      I                   myTime+0.5*shelfice_forcing_period, 
      I                   myThid )
@@ -91,7 +92,8 @@ C--   Now calculate whether it is time to update the forcing arrays
        else
         CALL GET_PERIODIC_INTERVAL(
      O                   nmP, nm0, nm1, tmpFac, fac,
-     I                   externForcingCycle, shelfice_forcing_period,
+     I                   shelfice_extern_forcing_cycle, 
+     I                   shelfice_forcing_period,
      I                   deltaTclock, myTime, 
      I                   myThid )
        endif
@@ -104,7 +106,7 @@ C--   Now calculate whether it is time to update the forcing arrays
        IF ( first ) changed = .false.
       endif
  
-
+      print *, "GOT HERE LOAD RUNOFF", nm0, nm1, fac
 
 C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
 
@@ -164,6 +166,8 @@ C-      endif 1rst iter.
         ENDIF
 
        _EXCH_XY_RL(shelficeSubglFlux, mythid )
+        print *, "GOT HERE LOAD RUNOFF2", 
+     &  myxgloballo, myygloballo,shelficeSubglFlux1(11,10,1,1)
 
 #endif
 #endif
