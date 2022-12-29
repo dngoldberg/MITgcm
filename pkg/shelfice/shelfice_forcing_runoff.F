@@ -266,6 +266,7 @@ C     !INTERFACE:
       SUBROUTINE SHELFICE_FORCING_RUNOFF_PTRACER(
      U                    gPtr_arr,
      I                    Ptr_arr,
+     I                    Ptr_conc,
      I                    iMin,iMax,jMin,jMax, kLev, bi, bj,
      I                    myTime, myIter, myThid )
 
@@ -301,6 +302,7 @@ C     myIter    :: Current iteration number
 C     myThid    :: my Thread Id number
       _RL     gPtr_arr(1-OLx:sNx+OLx,1-OLy:sNy+OLy)
       _RL     Ptr_arr(1-OLx:sNx+OLx,1-OLy:sNy+OLy)
+      _RL     Ptr_conc
       INTEGER iMin, iMax, jMin, jMax
       INTEGER kLev, bi, bj
       _RL     myTime
@@ -352,7 +354,7 @@ C--   Forcing term
 !!! ADD CLAUSE FOR klowc==1         
 
          IF (klev.eq.1 .and. kLev .EQ. kLowC(I,J,bi,bj)) THEN
-          gPtrloc = rflux * (SHELFICEptracConc - ptr_arr(i,j))
+          gPtrloc = rflux * (ptr_Conc - ptr_arr(i,j))
      &          /( drF(kLev)*_hFacC(I,J,kLev,bi,bj))
           gPtr_arr(i,j) = gPtr_arr(i,j) + gPtrloc
          ELSEIF ( kLev .GT. 1 .AND. kLev .EQ. kLowC(I,J,bi,bj) ) THEN
@@ -360,7 +362,7 @@ C--   Forcing term
           drLoc = min_thick_cell - drF(kLev)*_hFacC(I,J,kLev,bi,bj) 
           drLoc = MIN( drLoc, drF(Km1) * _hFacC(I,J,Km1,bi,bj) )
           drLoc = MAX( drLoc, 0. _d 0)
-          gPtrloc = rflux * (SHELFICEptracConc  - ptr_arr(i,j)) 
+          gPtrloc = rflux * (ptr_Conc  - ptr_arr(i,j)) 
      &         /( drF(kLev)*_hFacC(I,J,kLev,bi,bj)+drLoc )
           gPtr_arr(i,j) = gPtr_arr(i,j) + gPtrloc
          ELSEIF ( kLev .LT. Nr .AND. kLev+1 .EQ. kLowC(I,J,bi,bj) ) THEN
@@ -368,7 +370,7 @@ C--   Forcing term
           drLoc = min_thick_cell - drF(kLev)*_hFacC(I,J,kp1,bi,bj) 
           drLoc = MIN( drLoc, drF(kLev) * _hFacC(I,J,kLev,bi,bj) )
           drLoc = MAX( drLoc, 0. _d 0)
-          gPtrloc = rflux * (SHELFICEptracConc - ptr_arr(i,j))
+          gPtrloc = rflux * (ptr_Conc - ptr_arr(i,j))
      &         /( drF(kp1)*_hFacC(I,J,kp1,bi,bj)+drLoc )
           gPtr_arr(i,j) = gPtr_arr(i,j) + gPtrloc
      &         * drLoc*recip_drF(kLev)* _recip_hFacC(i,j,kLev,bi,bj)
