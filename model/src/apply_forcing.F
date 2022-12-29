@@ -707,8 +707,12 @@ c     ENDIF
      U                   gT_arr,
      I                   iMin,iMax,jMin,jMax, k, bi,bj,
      I                   myTime, myIter, myThid )
+      IF ( useShelfIce )
+     &     CALL SHELFICE_FORCING_RUNOFF_T(
+     U                   gT_arr,
+     I                   iMin,iMax,jMin,jMax, k, bi,bj,
+     I                   myTime, myIter, myThid )
 #endif /* ALLOW_SHELFICE */
-
 #ifdef ALLOW_ICEFRONT
       IF ( useICEFRONT )
      &     CALL ICEFRONT_TENDENCY_APPLY_T(
@@ -936,6 +940,11 @@ C     Ocean: Add salinity surface forcing (e.g., fresh-water) in surface level
 #ifdef ALLOW_SHELFICE
       IF ( useShelfIce )
      &     CALL SHELFICE_FORCING_S(
+     U                   gS_arr,
+     I                   iMin,iMax,jMin,jMax, k, bi,bj,
+     I                   myTime, myIter, myThid )
+      IF ( useShelfIce )
+     &     CALL SHELFICE_FORCING_RUNOFF_S(
      U                   gS_arr,
      I                   iMin,iMax,jMin,jMax, k, bi,bj,
      I                   myTime, myIter, myThid )
