@@ -196,7 +196,7 @@ CADJ &     = comlev1_stream_hybrid, key=ikey_1
                 d_loc = adam * visc_streamice_full(i,j,m,bi,bj) * 
      &           S1_princ - bdam
               endif
-              d_loc = min(d_loc, H_streamice(i,j,bi,bj))
+              d_loc = min(d_loc, .8*H_streamice(i,j,bi,bj))
               d_loc = max(d_loc, 0.0)
               cdepth = max(d_loc,crevasse_depth_adv(i,j,bi,bj))
               crevasse_depth_adv(i,j,bi,bj) = cdepth
@@ -366,5 +366,6 @@ CADJ &     = comlev1_stream_hybrid, key=ikey_1
 #endif
 #endif
 #endif
+
       RETURN
       END

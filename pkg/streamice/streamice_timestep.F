@@ -189,6 +189,12 @@ c NEW DIRECTIVES - DNG
 
        CALL STREAMICE_ADVECT_THICKNESS ( myThid, myIter, deltaT )
 
+#ifdef STREAMICE_ALLOW_DAMAGE
+       IF (useStreamiceDamage) THEN
+         CALL STREAMICE_ADVECT_CREVASSE ( myThid, myIter, deltaT )
+       ENDIF
+#endif
+
       ENDIF
 
 c CALL AT END INSTEAD OF BEGINNING - DNG
