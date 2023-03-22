@@ -65,6 +65,9 @@ NOOPTFILES=''
 CFLAGS='-O0'
 #- Requires gfortran from 2006 onwards for -fconvert=big-endian
 FFLAGS="$FFLAGS -fconvert=big-endian -fimplicit-none"
+if [ $fcVers -ge 10 ] ; then
+  FFLAGS="$FFLAGS -fallow-argument-mismatch"
+fi
 #- for big setups, compile & link with "-fPIC" or set memory-model to "medium":
 #CFLAGS="$CFLAGS -fPIC"
 #FFLAGS="$FFLAGS -fPIC"
