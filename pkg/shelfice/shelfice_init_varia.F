@@ -45,6 +45,7 @@ CEOP
           shelficeMass          (i,j,bi,bj) = 0. _d 0
           shelficeSubglFlux0    (i,j,bi,bj) = 0. _d 0
           shelficeSubglFlux1    (i,j,bi,bj) = 0. _d 0
+          shiCdrag_fld          (i,j,bi,bj) = 0. _d 0
          ENDDO
         ENDDO
        ENDDO
@@ -101,6 +102,24 @@ C     set coefficients to constant values
      &                      shelficeSubglFlux, 0, myThid )
        _EXCH_XY_RL( shelficeSubglFlux, myThid )
       ENDIF
+
+      IF ( SHELFICECdragFile .NE. ' ') then
+       CALL READ_FLD_XY_RS( SHELFICECdragFile, ' ',
+     &                      shiCdrag_fld, 0, myThid )
+      ELSE
+       DO bj = myByLo(myThid), myByHi(myThid)
+        DO bi = myBxLo(myThid), myBxHi(myThid)
+         DO j = 1-OLy, sNy+OLy
+          DO i = 1-OLx, sNx+OLx
+           shiCdrag_fld (i,j,bi,bj) = shiCdrag
+          ENDDO
+         ENDDO
+        ENDDO
+       ENDDO
+      ENDIF
+
+
+
 
 #ifdef ALLOW_COST
       DO bj = myByLo(myThid), myByHi(myThid)
