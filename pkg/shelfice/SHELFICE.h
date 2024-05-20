@@ -282,24 +282,4 @@ C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
       _RS shelficeDragV(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
 #endif /* ALLOW_DIAGNOSTICS */
 
-<<<<<<< HEAD
-
-      CHARACTER*(MAX_LEN_FNAM) SHELFICEloadAnomalyFile
-      CHARACTER*(MAX_LEN_FNAM) SHELFICEmassFile
-      CHARACTER*(MAX_LEN_FNAM) SHELFICEtopoFile
-      CHARACTER*(MAX_LEN_FNAM) SHELFICEMassDynTendFile
-      CHARACTER*(MAX_LEN_FNAM) SHELFICETransCoeffTFile
-      CHARACTER*(MAX_LEN_FNAM) SHELFICEMassTimeDepFile
-      CHARACTER*(MAX_LEN_FNAM) SHELFICEMassTendTimeDepFile
-      COMMON /SHELFICE_PARM_C/
-     &     SHELFICEloadAnomalyFile,
-     &     SHELFICEmassFile,
-     &     SHELFICEtopoFile,
-     &     SHELFICEMassDynTendFile,
-     &     SHELFICETransCoeffTFile,
-     &     SHELFICEMassTimeDepFile,
-     &     SHELFICEMassTendTimeDepFile	 
-
-=======
->>>>>>> master
 #endif /* ALLOW_SHELFICE */
