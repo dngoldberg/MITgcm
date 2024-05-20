@@ -138,6 +138,7 @@ CEOP
      &     SHELFICEuseGammaFrict,
      &     SHELFICE_oldCalcUStar,
      &     SHELFICEMassStepping,
+     &     SHI_update_kTopC,
      &     SHELFICEDynMassOnly,
      &     SHELFICE_massmin_truedens,
      &     SHELFICE_conserve_ssh
@@ -158,6 +159,7 @@ CEOP
       LOGICAL SHELFICE_oldCalcUStar
       LOGICAL SHELFICEMassStepping
       LOGICAL SHELFICEDynMassOnly
+      LOGICAL SHI_update_kTopC
       LOGICAL SHELFICE_massmin_truedens
       LOGICAL SHELFICE_conserve_ssh
 
