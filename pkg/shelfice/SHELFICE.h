@@ -61,6 +61,9 @@ C     shiPrandtl, shiSchmidt   :: constant Prandtl (13.8) and Schmidt (2432.0)
 C                                 numbers used to compute gammaTurb
 C     shiKinVisc               :: constant kinetic viscosity used to compute
 C                                 gammaTurb (def: 1.95e-5)
+C     SHI_update_kTopC         :: update lateral extension (kTopC) if ice-shelf
+C                                 retreats from or expands to model top level
+C                                 (requires to define ALLOW_SHELFICE_REMESHING)
 C     SHELFICEremeshFrequency  :: Frequency (in seconds) of call to
 C                                 SHELFICE_REMESHING (def: 0. --> no remeshing)
 C     SHELFICEsplitThreshold   :: Thickness fraction remeshing threshold above
@@ -118,10 +121,48 @@ C                           or shiTransCoeffT/S ctrl.
 C-----------------------------------------------------------------------
 C \ev
 CEOP
+      COMMON /SHELFICE_PARMS_L/
+     &     SHELFICEisOn,
+     &     useISOMIPTD,
+     &     SHELFICEconserve,
+     &     SHELFICEboundaryLayer,
+     &     SHI_withBL_realFWflux,
+     &     SHI_withBL_uStarTopDz,
+     &     no_slip_shelfice,
+     &     SHELFICEwriteState,
+     &     SHELFICE_dump_mdsio,
+     &     SHELFICE_tave_mdsio,
+     &     SHELFICE_dump_mnc,
+     &     SHELFICE_tave_mnc,
+     &     SHELFICEadvDiffHeatFlux,
+     &     SHELFICEuseGammaFrict,
+     &     SHELFICE_oldCalcUStar,
+     &     SHELFICEMassStepping,
+     &     SHELFICEDynMassOnly,
+     &     SHELFICE_massmin_truedens,
+     &     SHELFICE_conserve_ssh
+      LOGICAL SHELFICEisOn
+      LOGICAL useISOMIPTD
+      LOGICAL SHELFICEconserve
+      LOGICAL SHELFICEboundaryLayer
+      LOGICAL SHI_withBL_realFWflux
+      LOGICAL SHI_withBL_uStarTopDz
+      LOGICAL no_slip_shelfice
+      LOGICAL SHELFICEwriteState
+      LOGICAL SHELFICE_dump_mdsio
+      LOGICAL SHELFICE_tave_mdsio
+      LOGICAL SHELFICE_dump_mnc
+      LOGICAL SHELFICE_tave_mnc
+      LOGICAL SHELFICEadvDiffHeatFlux
+      LOGICAL SHELFICEuseGammaFrict
+      LOGICAL SHELFICE_oldCalcUStar
+      LOGICAL SHELFICEMassStepping
+      LOGICAL SHELFICEDynMassOnly
+      LOGICAL SHELFICE_massmin_truedens
+      LOGICAL SHELFICE_conserve_ssh
 
-      COMMON /SHELFICE_PARMS_I/  kTopC,
+      COMMON /SHELFICE_PARMS_I/
      &     SHELFICEselectDragQuadr
-      INTEGER kTopC (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       INTEGER SHELFICEselectDragQuadr
 
       COMMON /SHELFICE_PARMS_R/
@@ -160,6 +201,27 @@ CEOP
       _RL SHELFICE_forcing_period
       _RL SHELFICEdepthMinMelt
   
+
+      COMMON /SHELFICE_PARM_C/
+     &     SHELFICEloadAnomalyFile,
+     &     SHELFICEmassFile,
+     &     SHELFICEtopoFile,
+     &     SHELFICEMassDynTendFile,
+     &     SHELFICETransCoeffTFile,
+     &     SHELFICEMassTimeDepFile,
+     &     SHELFICEMassTendTimeDepFile
+      CHARACTER*(MAX_LEN_FNAM) SHELFICEloadAnomalyFile
+      CHARACTER*(MAX_LEN_FNAM) SHELFICEmassFile
+      CHARACTER*(MAX_LEN_FNAM) SHELFICEtopoFile
+      CHARACTER*(MAX_LEN_FNAM) SHELFICEMassDynTendFile
+      CHARACTER*(MAX_LEN_FNAM) SHELFICETransCoeffTFile
+      CHARACTER*(MAX_LEN_FNAM) SHELFICEMassTimeDepFile
+      CHARACTER*(MAX_LEN_FNAM) SHELFICEMassTendTimeDepFile
+
+C---+----1----+----2----+----3----+----4----+----5----+----6----+----7-|--+----|
+
+      COMMON /SHELFICE_FIELDS_I/ kTopC
+      INTEGER kTopC (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
 
       COMMON /SHELFICE_FIELDS_RL/
      &     shelficeMass, shelficeMassInit,
@@ -220,45 +282,7 @@ CEOP
       _RS shelficeDragV(1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
 #endif /* ALLOW_DIAGNOSTICS */
 
-      LOGICAL SHELFICEisOn
-      LOGICAL useISOMIPTD
-      LOGICAL SHELFICEconserve
-      LOGICAL SHELFICEboundaryLayer
-      LOGICAL SHI_withBL_realFWflux
-      LOGICAL SHI_withBL_uStarTopDz
-      LOGICAL no_slip_shelfice
-      LOGICAL SHELFICEwriteState
-      LOGICAL SHELFICE_dump_mdsio
-      LOGICAL SHELFICE_tave_mdsio
-      LOGICAL SHELFICE_dump_mnc
-      LOGICAL SHELFICE_tave_mnc
-      LOGICAL SHELFICEadvDiffHeatFlux
-      LOGICAL SHELFICEuseGammaFrict
-      LOGICAL SHELFICE_oldCalcUStar
-      LOGICAL SHELFICEMassStepping
-      LOGICAL SHELFICEDynMassOnly
-      LOGICAL SHELFICE_massmin_truedens
-      LOGICAL SHELFICE_conserve_ssh
-      COMMON /SHELFICE_PARMS_L/
-     &     SHELFICEisOn,
-     &     useISOMIPTD,
-     &     SHELFICEconserve,
-     &     SHELFICEboundaryLayer,
-     &     SHI_withBL_realFWflux,
-     &     SHI_withBL_uStarTopDz,
-     &     no_slip_shelfice,
-     &     SHELFICEwriteState,
-     &     SHELFICE_dump_mdsio,
-     &     SHELFICE_tave_mdsio,
-     &     SHELFICE_dump_mnc,
-     &     SHELFICE_tave_mnc,
-     &     SHELFICEadvDiffHeatFlux,
-     &     SHELFICEuseGammaFrict,
-     &     SHELFICE_oldCalcUStar,
-     &     SHELFICEMassStepping,
-     &     SHELFICEDynMassOnly,
-     &     SHELFICE_massmin_truedens,
-     &     SHELFICE_conserve_ssh
+<<<<<<< HEAD
 
       CHARACTER*(MAX_LEN_FNAM) SHELFICEloadAnomalyFile
       CHARACTER*(MAX_LEN_FNAM) SHELFICEmassFile
@@ -276,4 +300,6 @@ CEOP
      &     SHELFICEMassTimeDepFile,
      &     SHELFICEMassTendTimeDepFile	 
 
+=======
+>>>>>>> master
 #endif /* ALLOW_SHELFICE */

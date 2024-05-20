@@ -113,6 +113,10 @@ C     i, k   :: Loop counters.
      & '   /* Reference temperature profile ( oC or K ) */')
       CALL WRITE_1D_RL( sRef, Nr, INDEX_K, 'sRef =',
      & '   /* Reference salinity profile ( g/kg ) */')
+      CALL WRITE_1D_RL( rhoRef, Nr, INDEX_K, 'rhoRef =',
+     & '   /* Density vertical profile from (Ref,sRef)( kg/m^3 ) */')
+      CALL WRITE_1D_RL( dBdrRef,  Nr,   INDEX_K, 'dBdrRef =',
+     & ' /* Vertical grad. of reference buoyancy [(m/s/r)^2] */')
 C-    Horizontal viscosity parameters:
 #ifdef ALLOW_MOM_COMMON
       CALL WRITE_0D_L( useStrainTensionVisc, INDEX_NONE,
@@ -204,6 +208,10 @@ C-    Vertical viscosity parameters:
       CALL WRITE_0D_RL( bottomDragQuadratic, INDEX_NONE,
      & 'bottomDragQuadratic =',
      & ' /* quadratic bottom-drag coefficient (-) */')
+# ifdef ALLOW_BOTTOMDRAG_ROUGHNESS
+      CALL WRITE_0D_RL( zRoughBot, INDEX_NONE, 'zRoughBot =',
+     & ' /* roughness length for bottom friction (m) */')
+# endif
       CALL WRITE_0D_I( selectBotDragQuadr, INDEX_NONE,
      & 'selectBotDragQuadr =',
      & ' /* select quadratic bottom drag options */')
@@ -453,8 +461,8 @@ C-----
       CALL PRINT_MESSAGE( msgBuf, ioUnit, SQUEEZE_RIGHT, myThid )
       CALL PRINT_MESSAGE(endList, ioUnit, SQUEEZE_RIGHT, myThid )
 C-----
-      CALL WRITE_0D_L( metricTerms,  INDEX_NONE, 'metricTerms =',
-     &                '  /* metric-Terms on/off flag */')
+      CALL WRITE_0D_I( selectMetricTerms, INDEX_NONE,
+     & 'selectMetricTerms=', ' /* Metric-Terms on/off flag (=0/1) */')
       CALL WRITE_0D_L( useNHMTerms,  INDEX_NONE, 'useNHMTerms =',
      &              ' /* Non-Hydrostatic Metric-Terms on/off */')
       WRITE(msgBuf,'(2A)')
@@ -467,8 +475,8 @@ C-----
      &  ' 2= Spherical ; 3= read from file'
       CALL PRINT_MESSAGE( msgBuf, ioUnit, SQUEEZE_RIGHT, myThid )
       CALL PRINT_MESSAGE(endList, ioUnit, SQUEEZE_RIGHT, myThid )
-      CALL WRITE_0D_L( use3dCoriolis,  INDEX_NONE,
-     & 'use3dCoriolis =', ' /* 3-D Coriolis on/off flag */')
+      CALL WRITE_0D_I( select3dCoriScheme, INDEX_NONE,
+     & 'select3dCoriScheme=', ' /* 3-D Coriolis on/off flag (=0/1) */')
       CALL WRITE_0D_L( useCoriolis,  INDEX_NONE,
      & 'useCoriolis =', '  /* Coriolis on/off flag */')
       CALL WRITE_0D_L( useCDscheme,  INDEX_NONE,
@@ -937,12 +945,16 @@ c    &     'pickup_write_immed =','   /* Model IO flag. */')
      &  ' /* deep-model grid factor @ cell-Center (-) */')
       CALL WRITE_1D_RL( deepFacF, Nr+1, INDEX_K, 'deepFacF = ',
      &  ' /* deep-model grid factor @ W-Interface (-) */')
-      CALL WRITE_1D_RL(rVel2wUnit,Nr+1, INDEX_K,'rVel2wUnit =',
-     &  ' /* convert units: rVel -> wSpeed (=1 if z-coord)*/')
-      CALL WRITE_1D_RL(wUnit2rVel,Nr+1, INDEX_K,'wUnit2rVel =',
-     &  ' /* convert units: wSpeed -> rVel (=1 if z-coord)*/')
-      CALL WRITE_1D_RL( dBdrRef,  Nr,   INDEX_K, 'dBdrRef =',
-     & ' /* Vertical grad. of reference buoyancy [(m/s/r)^2] */')
+      IF ( usingPCoords ) THEN
+       CALL WRITE_1D_RL( rVel2wUnit, Nr+1, INDEX_K, 'rVel2wUnit =',
+     &  ' /* convert units: rVel [Pa/s] -> wSpeed [m/s] */')
+       CALL WRITE_1D_RL( wUnit2rVel, Nr+1, INDEX_K, 'wUnit2rVel =',
+     &  ' /* convert units: wSpeed [m/s] -> rVel [Pa/s] */')
+       CALL WRITE_1D_RL( rUnit2z, Nr, INDEX_K, 'rUnit2z =',
+     &  ' /* convert units (@ center): dr [Pa] -> dz [m] */')
+       CALL WRITE_1D_RL( z2rUnit, Nr, INDEX_K, 'z2rUnit =',
+     &  ' /* convert units (@ center): dz [m] -> dr [Pa] */')
+      ENDIF
       CALL WRITE_0D_L( rotateGrid, INDEX_NONE,
      & 'rotateGrid =',' /* use rotated grid ( True/False ) */')
       CALL WRITE_0D_RL( phiEuler, INDEX_NONE,'phiEuler =',

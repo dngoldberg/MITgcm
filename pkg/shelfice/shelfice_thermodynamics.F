@@ -38,8 +38,8 @@ C     === Global variables ===
 #include "SHELFICE_COST.h"
 #ifdef ALLOW_CTRL
 # include "CTRL_SIZE.h"
-# include "ctrl.h"
-# include "ctrl_dummy.h"
+# include "CTRL.h"
+# include "CTRL_DUMMY.h"
 # ifdef ALLOW_GENTIM2D_CONTROL
 #  include "CTRL_GENARR.h"
 # endif
@@ -134,8 +134,6 @@ C     drKp1, recip_drLoc
 #endif
 #ifdef ALLOW_AUTODIFF_TAMC
 # ifdef SHI_ALLOW_GAMMAFRICT
-      INTEGER act1, act2, act3, act4
-      INTEGER max1, max2, max3
       INTEGER ikey
 # endif
 #endif
@@ -230,9 +228,8 @@ C     where this value is part of the protocol
         ENDDO
        ENDDO
       ENDDO
-#ifdef ALLOW_CTRL
-      IF ( useCTRL .AND. ctrlUseGen ) THEN
-#ifdef ALLOW_GENTIM2D_CONTROL
+#if (defined ALLOW_CTRL && defined ALLOW_GENTIM2D_CONTROL)
+      IF ( useCTRL ) THEN
        DO iarr = 1, maxCtrlTim2D
         IF (xx_gentim2d_file(iarr)(1:11).EQ.'xx_shifwflx') THEN
          DO bj = myByLo(myThid),myByHi(myThid)
@@ -246,16 +243,16 @@ C     where this value is part of the protocol
          ENDDO
         ENDIF
        ENDDO
-#endif /* ALLOW_GENTIM2D_CONTROL */
       ENDIF
-#endif /* ALLOW_CTRL */
+#endif
 
+#ifdef ALLOW_SHELFICE_REMESHING
+      IF ( SHI_update_kTopC ) THEN
 C--   Deal with ice-shelf edge advance or retreat when allowing ice-shelf
 C     mass to change. Since current ice-shelf representation is missing
 C     a fractional ice-shelf cover representation, this turns into making
 C     or removing a "thin ice-shelf" grid-cell. Here we update "kTopC"
 C     as ice-shelf mass appears or vanishes in any surface grid-cell.
-      IF ( SHELFICEMassStepping ) THEN
         DO bj = myByLo(myThid), myByHi(myThid)
          DO bi = myBxLo(myThid), myBxHi(myThid)
           DO j = 1-OLy,sNy+OLy
@@ -271,8 +268,11 @@ C     as ice-shelf mass appears or vanishes in any surface grid-cell.
          ENDDO
         ENDDO
       ENDIF
-#ifdef ALLOW_AUTODIFF_TAMC
+# ifdef ALLOW_AUTODIFF_TAMC
 CADJ STORE kTopC        = comlev1, key=ikey_dynamics
+# endif
+#endif /* ALLOW_SHELFICE_REMESHING */
+#ifdef ALLOW_AUTODIFF_TAMC
 CADJ STORE shelficeMass = comlev1, key=ikey_dynamics, kind=isbyte
 #endif
 
@@ -343,16 +343,7 @@ CADJ STORE shelficeMass = comlev1, key=ikey_dynamics, kind=isbyte
 
 #ifdef ALLOW_AUTODIFF_TAMC
 # ifdef SHI_ALLOW_GAMMAFRICT
-        act1 = bi - myBxLo(myThid)
-        max1 = myBxHi(myThid) - myBxLo(myThid) + 1
-        act2 = bj - myByLo(myThid)
-        max2 = myByHi(myThid) - myByLo(myThid) + 1
-        act3 = myThid - 1
-        max3 = nTx*nTy
-        act4 = ikey_dynamics - 1
-        ikey = (act1 + 1) + act2*max1
-     &                    + act3*max1*max2
-     &                    + act4*max1*max2*max3
+        ikey = bi + (bj-1)*nSx + (ikey_dynamics-1)*nSx*nSy
 # endif /* SHI_ALLOW_GAMMAFRICT */
 #endif /* ALLOW_AUTODIFF_TAMC */
 
