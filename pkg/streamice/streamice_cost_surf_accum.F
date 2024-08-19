@@ -51,8 +51,8 @@ C     == Local variables
       INTEGER  ILNBLNK
       EXTERNAL ILNBLNK
       CHARACTER*(MAX_LEN_FNAM) surffilename, errsurffilename
-      CHARACTER*(MAX_LEN_FNAM) misfit_name
-      CHARACTER*(MAX_LEN_FNAM) scmisfit_name
+      CHARACTER*(MAX_LEN_FNAM) misfit_fname
+      CHARACTER*(MAX_LEN_FNAM) scmisfit_fname
       _RL surfobs (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL errsurfobs (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL misfitobs (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)

@@ -52,8 +52,8 @@ C     == Local variables
       CHARACTER*(MAX_LEN_FNAM) uvelfilename
       CHARACTER*(MAX_LEN_FNAM) vvelfilename
       CHARACTER*(MAX_LEN_FNAM) errvelfilename
-      CHARACTER*(MAX_LEN_FNAM) misfit_name
-      CHARACTER*(MAX_LEN_FNAM) scmisfit_name
+      CHARACTER*(MAX_LEN_FNAM) misfit_fname
+      CHARACTER*(MAX_LEN_FNAM) scmisfit_fname
       CHARACTER*(10) myIterStr
       _RL uvelobs (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL vvelobs (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
