@@ -60,7 +60,7 @@ C     == Local variables
       _RL errvelobs (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL misfitobs (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL scaledmisfitobs (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
-      _RL i_numcells, vel_err, uobs, vobs, verr
+      _RL i_numcells, vel_err, uobs, vobs, verr, mis
 
       WRITE(myIterStr,'(I10.10)') myIter
 
@@ -108,13 +108,15 @@ C--   Calculate cost function on tile of this instance
               vel_err = streamice_wgt_vel * i_numcells * (
      &         (streamice_u_surf(i,j,bi,bj)-uobs)**2
      &        +(streamice_v_surf(i,j,bi,bj)-vobs)**2)
-
-              misfitobs(i,j,bi,bj) = vel_err
-
-              vel_err = vel_err 
      &        /(1. + verr**2)
 
-              scaledmisfitobs(i,j,bi,bj) = vel_err
+              mis = sqrt(
+     &         (streamice_u_surf(i,j,bi,bj)-uobs)**2
+     &        +(streamice_v_surf(i,j,bi,bj)-vobs)**2)
+
+              misfitobs(i,j,bi,bj) = mis
+              scaledmisfitobs(i,j,bi,bj) = mis
+     &        /sqrt(1. + verr**2)
 
               cost_func1_streamice (bi,bj) =
      &        cost_func1_streamice (bi,bj) +

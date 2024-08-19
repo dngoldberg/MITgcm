@@ -57,7 +57,7 @@ C     == Local variables
       _RL errsurfobs (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL misfitobs (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL scaledmisfitobs (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
-      _RL rhoi, rhow, r, i_r, i_numcells, surf_err, h, hf
+      _RL rhoi, rhow, r, i_r, i_numcells, surf_err, h, hf, mis
       WRITE(myIterStr,'(I10.10)') myIter
       surffilename=STREAMICEsurfOptimTCBasename(1:
      & ILNBLNK(STREAMICEsurfOptimTCBasename))//myIterStr//".bin"
@@ -105,14 +105,14 @@ C--   Calculate cost function on tile of this instance
 
                surf_err = streamice_wgt_surf * i_numcells *
      &         (surf_el_streamice(i,j,bi,bj) -
-     &          surfobs(i,j,bi,bj))**2 
+     &          surfobs(i,j,bi,bj))**2 / 
+     &          (.001 + errSurfObs(i,j,bi,bj)**2)               
 
-               misfitobs(i,j,bi,bj) = surf_err
-
-               surf_err = surf_err / 
-     &          (.001 + errSurfObs(i,j,bi,bj)**2)
-
-               scaledmisfitobs(i,j,bi,bj) = surf_err
+               mis = (surf_el_streamice(i,j,bi,bj) -
+     &          surfobs(i,j,bi,bj)) 
+               misfitobs(i,j,bi,bj) = mis
+               scaledmisfitobs(i,j,bi,bj) = mis / 
+     &          sqrt(.001 + errSurfObs(i,j,bi,bj)**2)
 
                cost_func1_streamice (bi,bj) =
      &         cost_func1_streamice (bi,bj) +
