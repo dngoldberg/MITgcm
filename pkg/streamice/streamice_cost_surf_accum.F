@@ -51,8 +51,12 @@ C     == Local variables
       INTEGER  ILNBLNK
       EXTERNAL ILNBLNK
       CHARACTER*(MAX_LEN_FNAM) surffilename, errsurffilename
+      CHARACTER*(MAX_LEN_FNAM) misfit_name
+      CHARACTER*(MAX_LEN_FNAM) scmisfit_name
       _RL surfobs (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL errsurfobs (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RL misfitobs (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RL scaledmisfitobs (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL rhoi, rhow, r, i_r, i_numcells, surf_err, h, hf
       WRITE(myIterStr,'(I10.10)') myIter
       surffilename=STREAMICEsurfOptimTCBasename(1:
@@ -63,6 +67,10 @@ C     == Local variables
      &  0, myThid )
       CALL READ_FLD_XY_RL( errsurffilename, ' ', errsurfobs,
      &  0, myThid )
+      misfit_fname=STREAMICEsurfOptimTCBasename(1:
+     & ILNBLNK(STREAMICEsurfOptimTCBasename))//myIterStr//"_misfit"
+      scmisfit_fname=STREAMICEsurfOptimTCBasename(1:
+     & ILNBLNK(STREAMICEsurfOptimTCBasename))//myIterStr//"_scmisfit"
 
 c#ifdef ALLOW_AUTODIFF_TAMC
 cCADJ STORE surf_el_streamice  = comlev1, key = ikey_dynamics,
@@ -84,19 +92,27 @@ C--   Calculate cost function on tile of this instance
         DO bi=myBxLo(myThid),myBxHi(myThid)
           do j=1,sNy
             do i=1,sNx
+             misfitobs(i,j,bi,bj) = 0.0
+             scaledmisfitobs(i,j,bi,bj) = 0.0
              if (SURFOBS(i,j,bi,bj).ge.-999990. .and.
      &           streamice_hmask(i,j,bi,bj).eq.1.0) THEN
 
-             h = H_streamice(i,j,bi,bj)
-             hf = -1.0 * i_r * R_low_si (i,j,bi,bj)
+              h = H_streamice(i,j,bi,bj)
+              hf = -1.0 * i_r * R_low_si (i,j,bi,bj)
 
               if (((h-hf) .gt. 5.) .OR.
      &             STREAMICE_shelf_dhdt_ctrl) then
 
                surf_err = streamice_wgt_surf * i_numcells *
      &         (surf_el_streamice(i,j,bi,bj) -
-     &          surfobs(i,j,bi,bj))**2 /
+     &          surfobs(i,j,bi,bj))**2 
+
+               misfitobs(i,j,bi,bj) = surf_err
+
+               surf_err = surf_err / 
      &          (.001 + errSurfObs(i,j,bi,bj)**2)
+
+               scaledmisfitobs(i,j,bi,bj) = surf_err
 
                cost_func1_streamice (bi,bj) =
      &         cost_func1_streamice (bi,bj) +
@@ -113,6 +129,9 @@ C--   Calculate cost function on tile of this instance
           end do
         end do
       end do
+
+      CALL WRITE_FLD_XY_RL (misfit_fname,"",misfitobs,0,myThid)
+      CALL WRITE_FLD_XY_RL (scmisfit_fname,"",scaledmisfitobs,0,myThid)
 
 #endif
 

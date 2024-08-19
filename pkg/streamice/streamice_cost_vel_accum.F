@@ -52,10 +52,14 @@ C     == Local variables
       CHARACTER*(MAX_LEN_FNAM) uvelfilename
       CHARACTER*(MAX_LEN_FNAM) vvelfilename
       CHARACTER*(MAX_LEN_FNAM) errvelfilename
+      CHARACTER*(MAX_LEN_FNAM) misfit_name
+      CHARACTER*(MAX_LEN_FNAM) scmisfit_name
       CHARACTER*(10) myIterStr
       _RL uvelobs (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL vvelobs (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL errvelobs (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RL misfitobs (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
+      _RL scaledmisfitobs (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL i_numcells, vel_err, uobs, vobs, verr
 
       WRITE(myIterStr,'(I10.10)') myIter
@@ -72,6 +76,10 @@ C     == Local variables
      &      0, myThid )
       CALL READ_FLD_XY_RL( errvelfilename, ' ', errvelobs,
      &      0, myThid )
+      misfit_fname=STREAMICEvelOptimTCBasename(1:
+     & ILNBLNK(STREAMICEvelOptimTCBasename))//myIterStr//"_misfit"
+      scmisfit_fname=STREAMICEvelOptimTCBasename(1:
+     & ILNBLNK(STREAMICEvelOptimTCBasename))//myIterStr//"_scmisfit"
 
 c#ifdef ALLOW_AUTODIFF_TAMC
 cCADJ STORE surf_el_streamice  = comlev1, key = ikey_dynamics,
@@ -100,7 +108,13 @@ C--   Calculate cost function on tile of this instance
               vel_err = streamice_wgt_vel * i_numcells * (
      &         (streamice_u_surf(i,j,bi,bj)-uobs)**2
      &        +(streamice_v_surf(i,j,bi,bj)-vobs)**2)
+
+              misfitobs(i,j,bi,bj) = vel_err
+
+              vel_err = vel_err 
      &        /(1. + verr**2)
+
+              scaledmisfitobs(i,j,bi,bj) = vel_err
 
               cost_func1_streamice (bi,bj) =
      &        cost_func1_streamice (bi,bj) +
@@ -116,6 +130,8 @@ C--   Calculate cost function on tile of this instance
         end do
       end do
 
+      CALL WRITE_FLD_XY_RL (misfit_fname,"",misfitobs,0,myThid)
+      CALL WRITE_FLD_XY_RL (scmisfit_fname,"",scaledmisfitobs,0,myThid)
 #endif
 
       RETURN
