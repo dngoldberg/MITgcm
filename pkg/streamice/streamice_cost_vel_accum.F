@@ -76,10 +76,8 @@ C     == Local variables
      &      0, myThid )
       CALL READ_FLD_XY_RL( errvelfilename, ' ', errvelobs,
      &      0, myThid )
-      misfit_fname=STREAMICEvelOptimTCBasename(1:
-     & ILNBLNK(STREAMICEvelOptimTCBasename))//myIterStr//"_misfit"
-      scmisfit_fname=STREAMICEvelOptimTCBasename(1:
-     & ILNBLNK(STREAMICEvelOptimTCBasename))//myIterStr//"_scmisfit"
+      misfit_fname="vel_misfit"//myIterStr//"_misfit"
+      scmisfit_fname="vel_misfit"//myIterStr//"_scmisfit"
 
 c#ifdef ALLOW_AUTODIFF_TAMC
 cCADJ STORE surf_el_streamice  = comlev1, key = ikey_dynamics,
