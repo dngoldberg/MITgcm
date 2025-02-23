@@ -131,6 +131,7 @@ c          h_after_uflux_SI(i,j,bi,bj) = 0. _d 0
         cost_smooth_fric_streamice (bi,bj) = 0.0
         cost_smooth_glen_streamice (bi,bj) = 0.0
         cost_prior_streamice (bi,bj) = 0.0
+        cost_smooth_bdotmmelt_streamice(bi,bj) = 0.0
 #endif
 
        ENDDO

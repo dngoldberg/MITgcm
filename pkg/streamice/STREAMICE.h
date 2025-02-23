@@ -990,12 +990,14 @@ C  POSITIVE WHERE MELTING
      &       cost_surf_streamice,
      &       cost_smooth_fric_streamice,
      &       cost_smooth_glen_streamice,
+     $       cost_smooth_bdotmmelt_streamice,
      &       cost_prior_streamice
       _RL cost_func1_streamice(nSx,nSy)
       _RL cost_vel_streamice(nSx,nSy)
       _RL cost_surf_streamice(nSx,nSy)
       _RL cost_smooth_fric_streamice(nSx,nSy)
       _RL cost_smooth_glen_streamice(nSx,nSy)
+      _RL cost_smooth_bdotmmelt_streamice(nSx,nSy)
       _RL cost_prior_streamice(nSx,nSy)
 
 C    NOTES :
