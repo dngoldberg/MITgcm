@@ -56,7 +56,7 @@ C     == Local variables
       _RL uvelobs (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL vvelobs (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
       _RL errvelobs (1-OLx:sNx+OLx,1-OLy:sNy+OLy,nSx,nSy)
-      _RL i_numcells, vel_err, uobs, vobs, verr
+      _RL i_numcells, vel_err, uobs, vobs, verr, i_r, h, hf
 
       WRITE(myIterStr,'(I10.10)') myIter
 
