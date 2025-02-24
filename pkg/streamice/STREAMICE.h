@@ -573,6 +573,8 @@ C                                 :: do cost for verification test
 C     STREAMICE_do_vaf_cost       :: do cost for volume above floatation
 C     STREAMICE_shelf_dhdt_ctrl   :: option to apply surface elevation constraint to
 C                                    floating ice in cost function
+C     STREAMICE_shelf_vel_ctrl    :: option to apply velocity constraint to
+C                                    floating ice in cost function (tdep only)
 
       LOGICAL STREAMICEison
       LOGICAL STREAMICE_dump_mdsio
@@ -601,6 +603,7 @@ C                                    floating ice in cost function
       LOGICAL STREAMICE_do_verification_cost
       LOGICAL STREAMICE_do_vaf_cost
       LOGICAL STREAMICE_shelf_dhdt_ctrl
+      LOGICAL STREAMICE_shelf_vel_ctrl
 #if (defined (ALLOW_OPENAD) && defined (ALLOW_STREAMICE_OAD_FP) )
 #ifdef ALLOW_PETSC
       LOGICAL STREAMICE_need2createmat
@@ -646,6 +649,7 @@ C      LOGICAL STREAMICE_hybrid_stress
      & STREAMICE_do_vaf_cost,
      & STREAMICE_do_timedep_cost,
      & STREAMICE_shelf_dhdt_ctrl,
+     & STREAMICE_shelf_vel_ctrl,
 #ifdef STREAMICE_FLOWLINE_BUTTRESS
      & useStreamiceFlowlineButtr,
 #endif

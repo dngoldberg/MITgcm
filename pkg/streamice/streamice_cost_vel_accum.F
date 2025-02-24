@@ -97,18 +97,25 @@ C--   Calculate cost function on tile of this instance
              if (uobs.gt.-999990. .and. vobs.gt.-999990. .and.
      &           verr.gt.-999990.) then
 
-              vel_err = streamice_wgt_vel * i_numcells * (
-     &         (streamice_u_surf(i,j,bi,bj)-uobs)**2
-     &        +(streamice_v_surf(i,j,bi,bj)-vobs)**2)
-     &        /(1. + verr**2)
+              h = H_streamice(i,j,bi,bj)
+              hf = -1.0 * i_r * R_low_si (i,j,bi,bj)
 
-              cost_func1_streamice (bi,bj) =
-     &        cost_func1_streamice (bi,bj) +
-     &              vel_err
-              cost_vel_streamice (bi,bj) =
-     &        cost_vel_streamice (bi,bj) +
-     &              vel_err
+              if (((h-hf) .gt. 5.) .OR.
+     &             STREAMICE_shelf_vel_ctrl) then 
 
+               vel_err = streamice_wgt_vel * i_numcells * (
+     &          (streamice_u_surf(i,j,bi,bj)-uobs)**2
+     &         +(streamice_v_surf(i,j,bi,bj)-vobs)**2)
+     &         /(1. + verr**2)
+
+               cost_func1_streamice (bi,bj) =
+     &         cost_func1_streamice (bi,bj) +
+     &               vel_err
+               cost_vel_streamice (bi,bj) =
+     &         cost_vel_streamice (bi,bj) +
+     &               vel_err
+
+              end if
              end if
 
             end do
