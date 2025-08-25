@@ -114,6 +114,12 @@ c      PC  pc
       Vec rhs
       Vec solution
       PetscErrorCode ierr
+      IS rowperm, colperm
+      IS inv_rowperm, inv_colperm 
+      Vec bP, xP
+      Mat matrixP
+      VecScatter scat_b, scat_x
+      PetscBool flg
 #ifdef ALLOW_USE_MPI
       integer mpiRC, mpiMyWid
 #endif
@@ -332,12 +338,65 @@ c     &              A_vv(i,j,bi,bj,colx,coly),INSERT_VALUES,ierr)
       call MatAssemblyBegin(matrix,MAT_FINAL_ASSEMBLY,ierr)
       call MatAssemblyEnd(matrix,MAT_FINAL_ASSEMBLY,ierr)
 
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC      
+      CALL TIMER_START ('STREAMICE_PETSC_PERMUTE',myThid)
+
+C ---- (1) Obtain Reverse Cuthill–McKee ordering ----------------------
+C The orderings are distributed and compatible with matrix.
+      call MatGetOrdering(matrix, MATORDERINGRCM, rowperm, colperm, 
+     &                    ierr)
+      if (ierr .ne. 0) then
+       print *, 'MatGetOrdering(MATORDERINGRCM) failed'; return
+      endif
+
+C     Discard column IS and duplicate row IS so we own two distinct
+C     handles (avoid double-destroy on the same IS object).
+      call ISDestroy(colperm, ierr)
+      call ISDuplicate(rowperm, colperm, ierr)
+      if (ierr .ne. 0) then
+       print *, 'ISDuplicate(rowperm->colperm) failed'; return
+      endif
+
+C ---- (2) Build permuted operator A' = P_r * A * P_c^T ----------------
+      call MatPermute(matrix, rowperm, colperm, matrixP, ierr)
+      if (ierr .ne. 0) then
+       print *, 'MatPermute failed'; return
+      endif
+
+C ---- (3) Create RHS/solution vectors with matrixP layout -------------
+      call MatCreateVecs(matrixP, xP, bP, ierr)
+      if (ierr .ne. 0) then
+       print *, 'MatCreateVecs(matrixP,...) failed'; return
+      endif
+
+C ---- (4) Build scatters for RHS and solution mappings ----------------
+C b' = P_r * b => bP(i) = b( rowperm(i) )
+C x = P_c^T x' => x(j) = xP( inv_colperm(j) )
+
+
+      call ISInvertPermutation(rowperm, PETSC_DECIDE, inv_rowperm, ierr)
+      if (ierr .ne. 0) then
+       print *, 'ISInvertPermutation(rowperm) failed'; return
+      endif
+
+
+      call ISInvertPermutation(colperm, PETSC_DECIDE, inv_colperm, ierr)
+      if (ierr .ne. 0) then
+       print *, 'ISInvertPermutation(colperm) failed'; return
+      endif      
+
+      CALL TIMER_STOP ('STREAMICE_PETSC_PERMUTE',myThid)
+
+
+
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+
       call KSPCreate(PETSC_COMM_WORLD, ksp, ierr)
 #ifdef STREAMICE_PETSC_3_8
       call KSPSetOperators(ksp, matrix, matrix,
      &                      ierr)
 #else
-      call KSPSetOperators(ksp, matrix, matrix,
+      call KSPSetOperators(ksp, matrixP, matrixP,
      &                     DIFFERENT_NONZERO_PATTERN,ierr)
 #endif
 
@@ -421,16 +480,51 @@ C       call PCGAMGSetReuseProl(pc,PETSC_FALSE,ierr)
 #endif
 #endif
 
+      CALL TIMER_START ('STREAMICE_PETSC_PERMUTE',myThid)
+      call VecScatterCreate(rhs, rowperm, bP,
+     & PETSC_NULL_IS, scat_b, ierr)
+      if (ierr .ne. 0) then
+       print *, 'VecScatterCreate(rhs,rowperm->bP) failed'; return
+      endif
+      call VecScatterBegin(scat_b, rhs, bP, INSERT_VALUES,
+     & SCATTER_FORWARD, ierr)
+      call VecScatterEnd (scat_b, rhs, bP, INSERT_VALUES,
+     & SCATTER_FORWARD, ierr)
+      call VecScatterDestroy(scat_b, ierr)
+      CALL TIMER_STOP ('STREAMICE_PETSC_PERMUTE',myThid)
+
       CALL TIMER_START ('STREAMICE_PETSC_SOLVE',myThid)
 
-      call KSPSolve(ksp, rhs, solution, ierr)
+      call KSPSolve(ksp, bP, xP, ierr)
 
       CALL TIMER_STOP ('STREAMICE_PETSC_SOLVE',myThid)
 
       call KSPGetIterationNumber(ksp,iters,ierr)
 
+      CALL TIMER_START ('STREAMICE_PETSC_PERMUTE',myThid)
+      call VecScatterCreate(xP, rowperm, solution,
+     & PETSC_NULL_IS, scat_x, ierr)
+      if (ierr .ne. 0) then
+       print *, 'VecScatterCreate(rhs,rowperm->bP) failed'; return
+      endif
+      call VecScatterBegin(scat_x, xP, solution, INSERT_VALUES,
+     & SCATTER_FORWARD, ierr)
+      call VecScatterEnd (scat_x, xP, solution, INSERT_VALUES,
+     & SCATTER_FORWARD, ierr)
+      call VecScatterDestroy(scat_x, ierr) 
+      CALL TIMER_STOP ('STREAMICE_PETSC_PERMUTE',myThid)
+
       call VecGetValues(solution,local_dofs,indices,
      &      solution_values,ierr)
+
+      call KSPDestroy(ksp, ierr)
+      call MatDestroy(matrixP, ierr)
+      call ISDestroy(rowperm, ierr)
+      call ISDestroy(colperm, ierr)
+      call ISDestroy(inv_rowperm, ierr)
+      call ISDestroy(inv_colperm, ierr)
+      call VecDestroy(xP, ierr)
+      call VecDestroy(bP, ierr)
 
       DO bj = myByLo(myThid), myByHi(myThid)
        DO bi = myBxLo(myThid), myBxHi(myThid)
