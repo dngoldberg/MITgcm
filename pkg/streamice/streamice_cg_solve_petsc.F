@@ -363,6 +363,8 @@ C ---- (2) Build permuted operator A' = P_r * A * P_c^T ----------------
        print *, 'MatPermute failed'; return
       endif
 
+      call MatSetOption(matrixP, MAT_SYMMETRIC, PETSC_TRUE, ierr)
+
 C ---- (3) Create RHS/solution vectors with matrixP layout -------------
       call MatCreateVecs(matrixP, xP, bP, ierr)
       if (ierr .ne. 0) then
@@ -393,7 +395,7 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 
       call KSPCreate(PETSC_COMM_WORLD, ksp, ierr)
 #ifdef STREAMICE_PETSC_3_8
-      call KSPSetOperators(ksp, matrix, matrix,
+      call KSPSetOperators(ksp, matrixP, matrixP,
      &                      ierr)
 #else
       call KSPSetOperators(ksp, matrixP, matrixP,
