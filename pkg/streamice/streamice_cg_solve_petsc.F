@@ -341,6 +341,8 @@ c     &              A_vv(i,j,bi,bj,colx,coly),INSERT_VALUES,ierr)
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC      
       CALL TIMER_START ('STREAMICE_PETSC_PERMUTE',myThid)
 
+      
+
 C ---- (1) Obtain Reverse Cuthill–McKee ordering ----------------------
 C The orderings are distributed and compatible with matrix.
       call MatGetOrdering(matrix, MATORDERINGRCM, rowperm, colperm, 
@@ -504,7 +506,7 @@ C       call PCGAMGSetReuseProl(pc,PETSC_FALSE,ierr)
       call KSPGetIterationNumber(ksp,iters,ierr)
 
       CALL TIMER_START ('STREAMICE_PETSC_PERMUTE',myThid)
-      call VecScatterCreate(xP, rowperm, solution,
+      call VecScatterCreate(xP, inv_rowperm, solution,
      & PETSC_NULL_IS, scat_x, ierr)
       if (ierr .ne. 0) then
        print *, 'VecScatterCreate(rhs,rowperm->bP) failed'; return
