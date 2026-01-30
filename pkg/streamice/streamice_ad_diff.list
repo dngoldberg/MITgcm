@@ -36,3 +36,5 @@ streamice_vel_phistage.f
 streamice_vel_phi.f
 streamice_get_fp_err_oad.f
 streamice_get_vel_resid_err_oad.f
+streamice_get_vel_fp_err.f
+streamice_get_vel_resid_err.f
