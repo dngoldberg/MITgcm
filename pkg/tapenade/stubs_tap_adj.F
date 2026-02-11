@@ -435,12 +435,11 @@ C [llh] Hand-written backward-sweep adjoint code of STREAMICE_CG_SOLVE
 C [llh] Adjoint of solving Ax=b,
 C [llh]  where A is (Auu, Auv, Avu, Avv), x is (xu,xv), b is (bu,bv)
       SUBROUTINE STREAMICE_CG_SOLVE_BWD(
-     &                                cg_uin, cg_uinb, cg_vin, cg_vinb,
-     &                                cg_bu, cg_bub, cg_bv, cg_bvb, a_uu
-     &                                , a_uub, a_uv, a_uvb, a_vu, a_vub
-     &                                , a_vv, a_vvb, tolerance,
-     &                                iters, maxiter,
-     &                                myThid)
+     &                        cg_Uin, cg_Uinb, cg_Vin, cg_Vinb,
+     &                        cg_Bu, cg_Bub, cg_Bv, cg_Bvb,
+     &                        A_uu, A_uub, A_uv, A_uvb,
+     &                        A_vu, A_vub, A_vv, A_vvb,
+     &                        tolerance, iters, maxIter, myThid )
 
       IMPLICIT NONE
 
